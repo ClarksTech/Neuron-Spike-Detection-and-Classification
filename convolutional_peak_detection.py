@@ -46,7 +46,7 @@ plt.plot(spike_d)
 plt.show()
 
 # Convolve window to find peaks
-threshold = 0.9
+threshold = 0.9065
 x = 51
 for x in range(len(spike_d)-1):
     # get window values
@@ -87,12 +87,9 @@ print(len(index_found))
 
 fig, ax = plt.subplots(figsize=(15, 5))
 
-for i in range(20):
+for i in range(len(peak_found_waveform)):
     ax.plot(peak_found_waveform[i])
 
-
-
-#plt.plot(peak_found_waveform[0])
 plt.show()
 
 
