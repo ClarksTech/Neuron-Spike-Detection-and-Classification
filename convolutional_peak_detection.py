@@ -94,10 +94,10 @@ peak_found_index, peak_found_waveform = convolution_peak_detection(filtered_data
 Index_sorted = sorted(Index, reverse=False)
 
 # print length of known indexes
-print(len(Index_sorted))
+print("known number of peaks: ", len(Index_sorted))
 
 # print length of found indexes
-print(len(peak_found_index))
+print("Detected number of peaks: ", len(peak_found_index))
 
 # plot all found waveforms of peaks on same axis to verify detection is finding peaks
 fig, ax = plt.subplots(figsize=(15, 5))         # use subplot for single axis
@@ -111,7 +111,7 @@ index_as_set = set(Index)
 intersection = index_as_set.intersection(peak_found_index)
 intersection_list = list(intersection)
 #print(intersection_list)
-print(len(intersection_list))
+print("Number of detected peaks matching known peaks: ", len(intersection_list))
 
 # save as CSV
 np.savetxt("index.csv", Index_sorted, delimiter = ",")
