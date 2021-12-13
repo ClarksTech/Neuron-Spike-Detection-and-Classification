@@ -97,7 +97,7 @@ datastream, Index, Class, sample_rate = load_training_dataset("training.mat")
 # filter the datastream using level 6 wavelet filter
 filtered_data_stream = wavelet_filter_datastream(datastream)
 
-# detect the peaks in the resulting datastream - store peak index and waveform in variables 0.4896
+# detect the peaks in the resulting datastream - store peak index and waveform in variables 0.4896, 0.42
 peak_found_index, peak_found_waveform, peak_maxima_index= convolution_peak_detection(filtered_data_stream, 0.42, 50)
 
 # sort know indexes into ascending order
@@ -118,11 +118,13 @@ plt.show()                                      # show the plot of peak waveform
 # check if peak index found matches known peak index
 correct_index = []
 for x in range(len(peak_found_index)):
-    peak_maxima = peak_found_index[x]
+    peak_start = peak_found_index[x]
     # create range for initial peak start variance from maxima
-    for var in range((peak_maxima+10), (peak_maxima-10), -1):       # initial peak point may be within margine of error +-10 to expected position
+    for var in range((peak_start+10), (peak_start-10), -1):         # initial peak point may be within margine of error +-10 to expected position
             if var in Index_sorted:                                 # check if potential peak start matches known index
-                correct_index.append(peak_maxima)                   # if found increment correct index counter
+                correct_index.append(peak_start)                    # if found increment correct index counter
+                position_found = Index_sorted.index(var)
+                Index_sorted[position_found] = 0                    # set to 0 to avoid same point being identified as correct twice
                 break
 # display the number of correctly detected peaks and peake detection performance
 print("Number of detected peaks matching known peaks: ", len(correct_index), " Peak detection performance = ", len(correct_index)/len(Index_sorted))
