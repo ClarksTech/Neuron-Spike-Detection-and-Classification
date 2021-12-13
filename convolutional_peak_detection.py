@@ -18,6 +18,17 @@ def load_training_dataset(dataset):
     return Data_stream, Index, Class, sample_rate
 
 ##################################################################
+############### - Import the submission dataset - ################
+def load_submission_dataset(dataset):
+    # import from matlab file type to store in arrays
+    dataset_all = spio.loadmat(dataset, squeeze_me=True)
+    Data_stream = dataset_all['d']                          # array for whole data stream
+    sample_rate = 25000                                     # known sample rate of data (Hz)
+
+    # return all arrays containing training dataset values and known sample rate
+    return Data_stream, sample_rate
+
+##################################################################
 ########## - Perform Wavelet Filtering on Datastream - ###########
 def wavelet_filter_datastream(datastream):
     # using Daubechies(4) wavelet filter
@@ -92,7 +103,8 @@ def convolution_peak_detection(filtereddatastream, threshold, windowsize):
 ################################## - Main Code Run - #########################################
 
 # load the matlab data into variables
-datastream, Index, Class, sample_rate = load_training_dataset("training.mat")
+#datastream, Index, Class, sample_rate = load_training_dataset("training.mat")
+datastream, sample_rate = load_submission_dataset("submission.mat")
 
 # filter the datastream using level 6 wavelet filter
 filtered_data_stream = wavelet_filter_datastream(datastream)
@@ -101,10 +113,10 @@ filtered_data_stream = wavelet_filter_datastream(datastream)
 peak_found_index, peak_found_waveform, peak_maxima_index= convolution_peak_detection(filtered_data_stream, 0.42, 50)
 
 # sort know indexes into ascending order
-Index_sorted = sorted(Index, reverse=False)
+#Index_sorted = sorted(Index, reverse=False)
 
 # print length of known indexes
-print("known number of peaks: ", len(Index_sorted))
+#print("known number of peaks: ", len(Index_sorted))
 
 # print length of found indexes
 print("Detected number of peaks: ", len(peak_found_index))
@@ -116,19 +128,19 @@ for i in range(len(peak_found_waveform)):       # plot every waveform in peak de
 plt.show()                                      # show the plot of peak waveforms
 
 # check if peak index found matches known peak index
-correct_index = []
-for x in range(len(peak_found_index)):
-    peak_start = peak_found_index[x]
+#correct_index = []
+#for x in range(len(peak_found_index)):
+#    peak_start = peak_found_index[x]
     # create range for initial peak start variance from maxima
-    for var in range((peak_start+10), (peak_start-10), -1):         # initial peak point may be within margine of error +-10 to expected position
-            if var in Index_sorted:                                 # check if potential peak start matches known index
-                correct_index.append(peak_start)                    # if found increment correct index counter
-                position_found = Index_sorted.index(var)
-                Index_sorted[position_found] = 0                    # set to 0 to avoid same point being identified as correct twice
-                break
+#    for var in range((peak_start+10), (peak_start-10), -1):         # initial peak point may be within margine of error +-10 to expected position
+#            if var in Index_sorted:                                 # check if potential peak start matches known index
+#                correct_index.append(peak_start)                    # if found increment correct index counter
+#                position_found = Index_sorted.index(var)
+#                Index_sorted[position_found] = 0                    # set to 0 to avoid same point being identified as correct twice
+#                break
 # display the number of correctly detected peaks and peake detection performance
-print("Number of detected peaks matching known peaks: ", len(correct_index), " Peak detection performance = ", len(correct_index)/len(Index_sorted))
+#print("Number of detected peaks matching known peaks: ", len(correct_index), " Peak detection performance = ", len(correct_index)/len(Index_sorted))
 
 # save as CSV
-np.savetxt("index.csv", Index_sorted, delimiter = ",")
-np.savetxt("index_found.csv", peak_found_index, delimiter = ",")
+#np.savetxt("index.csv", Index_sorted, delimiter = ",")
+#np.savetxt("index_found.csv", peak_found_index, delimiter = ",")
