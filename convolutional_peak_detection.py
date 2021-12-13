@@ -41,21 +41,22 @@ def wavelet_filter_datastream(datastream):
 def convolution_peak_detection(filtereddatastream, threshold, windowsize):
     # initialise containers for detected peaks and their waveforms
     peak_found_index = []
+    peak_maxima_index = []
     peak_found_waveform = []
     datastream_length = int(len(filtereddatastream))
     # Convolve window over every data position of datastream to find peaks
     for x in range(int(windowsize/2),int(datastream_length-(windowsize/2))):
         # get window values arround current datapoint
-        windowmin = int(x-(windowsize/2))                # minimum index for current location
-        windowmax = int(x+(windowsize/2))                # maximum index for current location
-        window = filtereddatastream[windowmin:windowmax]       # populate the window with in range values
+        windowmin = int(x-(windowsize/2))                       # minimum index for current location
+        windowmax = int(x+(windowsize/2))                       # maximum index for current location
+        window = filtereddatastream[windowmin:windowmax]        # populate the window with in range values
 
         # calculate mean of window for peak threshold decision
         mean = abs(np.mean(window))
 
         # determine posibility of peak by comparing current data point value to threshold
-        if (filtereddatastream[x] > mean+threshold):           # possible peaks when dava larger than mean + threshold
-            peak_pos = x                            # store potential peak position
+        if (filtereddatastream[x] > mean+threshold):            # possible peaks when dava larger than mean + threshold
+            peak_pos = x                                        # store potential peak position
 
             # check it is largest of surrounding i.e. not false summit
             window_surround = window[int((windowsize/2)-10):int((windowsize/2)+10)]      # create surrounding window 10 either side
@@ -66,17 +67,26 @@ def convolution_peak_detection(filtereddatastream, threshold, windowsize):
                 # check is actual peak not noise spike by verifying all surrounding datapoints above threshold
                 peak_points_above_thresh = 0        # initalise counter for points above threshold at peak
                 # check peak points 2 either side of possible peak
-                for x in range(8,12):
+                for x in range(8,13):
                     # if the value being checked is greater than mean + 1/2 of threshold
                     if window_surround[x] >= (mean + (threshold/2)):
                         peak_points_above_thresh = peak_points_above_thresh + 1 # increment counter
                 # peak confirmed if more than 100 % was above threshold
-                if peak_points_above_thresh == 4:
-                    peak_found_index.append(peak_pos)       # add peak index to array
+                if peak_points_above_thresh == 5:
+                    peak_maxima_index.append(peak_pos)      # add peak index to array
                     peak_found_waveform.append(window)      # add peak waveform to array
 
+                    # convert index array from maxima of spike to start of spike index
+                    count_below_mean = 0                                    # initialise count of points below mean
+                    for var in range(peak_pos, (peak_pos-50), -1):          # start of peak point may be up to 50 before maxima peak
+                        if filtereddatastream[var] <= mean :                # check if point becomes reduced to mean signifying start of peak
+                            count_below_mean = count_below_mean + 1
+                        if count_below_mean >= 2:                           # if point has been below mean for 2 counts (anomalie rejection)
+                            peak_found_index.append(var)                    # when start point found store in holding array
+                            break
+
     # return arrays of peak index and waveforms found
-    return peak_found_index, peak_found_waveform
+    return peak_found_index, peak_found_waveform, peak_maxima_index
 
 ##############################################################################################
 ################################## - Main Code Run - #########################################
@@ -87,8 +97,8 @@ datastream, Index, Class, sample_rate = load_training_dataset("training.mat")
 # filter the datastream using level 6 wavelet filter
 filtered_data_stream = wavelet_filter_datastream(datastream)
 
-# detect the peaks in the resulting datastream - store peak index and waveform in variables
-peak_found_index, peak_found_waveform = convolution_peak_detection(filtered_data_stream, 0.4896, 50)
+# detect the peaks in the resulting datastream - store peak index and waveform in variables 0.4896
+peak_found_index, peak_found_waveform, peak_maxima_index= convolution_peak_detection(filtered_data_stream, 0.42, 50)
 
 # sort know indexes into ascending order
 Index_sorted = sorted(Index, reverse=False)
@@ -105,13 +115,17 @@ for i in range(len(peak_found_waveform)):       # plot every waveform in peak de
     ax.plot(peak_found_waveform[i])             # subplot
 plt.show()                                      # show the plot of peak waveforms
 
-
 # check if peak index found matches known peak index
-index_as_set = set(Index)
-intersection = index_as_set.intersection(peak_found_index)
-intersection_list = list(intersection)
-#print(intersection_list)
-print("Number of detected peaks matching known peaks: ", len(intersection_list))
+correct_index = []
+for x in range(len(peak_found_index)):
+    peak_maxima = peak_found_index[x]
+    # create range for initial peak start variance from maxima
+    for var in range((peak_maxima+10), (peak_maxima-10), -1):       # initial peak point may be within margine of error +-10 to expected position
+            if var in Index_sorted:                                 # check if potential peak start matches known index
+                correct_index.append(peak_maxima)                   # if found increment correct index counter
+                break
+# display the number of correctly detected peaks and peake detection performance
+print("Number of detected peaks matching known peaks: ", len(correct_index), " Peak detection performance = ", len(correct_index)/len(Index_sorted))
 
 # save as CSV
 np.savetxt("index.csv", Index_sorted, delimiter = ",")
