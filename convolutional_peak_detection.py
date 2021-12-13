@@ -3,99 +3,116 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pywt
 
-mat = spio.loadmat('training.mat', squeeze_me=True)
-d = mat['d']
-Index = mat['Index']
-index_found = []
-peak_found_waveform = []
-Class = mat['Class']
-sample_rate = 25000
-max_time = 1440000/25000
-x = np.linspace(0,max_time,d.size)
 
-plt.plot(x,d)
-plt.show()
+##################################################################
+################# - Import the training dataset - ################
+def load_training_dataset(dataset):
+    # import from matlab file type to store in arrays
+    dataset_all = spio.loadmat(dataset, squeeze_me=True)
+    Data_stream = dataset_all['d']                          # array for whole data stream
+    sample_rate = 25000                                     # known sample rate of data (Hz)
+    Index = dataset_all['Index']                            # array for index of known spikes
+    Class = dataset_all['Class']                            # array for class of known spikes
+                                
+    # return all arrays containing training dataset values and known sample rate
+    return Data_stream, Index, Class, sample_rate
 
+##################################################################
+########## - Perform Wavelet Filtering on Datastream - ###########
+def wavelet_filter_datastream(datastream):
+    # using Daubechies(4) wavelet filter
+    wavelet = "db4"    
+    maxlevel = 6
 
-x = np.linspace(0,max_time,d.size)
-
-# filter
-# We will use the Daubechies(4) wavelet
-wname = "db4"
-maxlevel = 6
-data = np.atleast_2d(d)
-numwires, datalength = data.shape
-	
-# Initialize the container for the filtered data
-fdata = np.empty((numwires, datalength))
-	
-for i in range(numwires):
+    # Initialize array for new filtered data
+    filtered_data_stream = np.empty((1, len(datastream)))      
+    	
 	# Decompose the signal
-	c = pywt.wavedec(data[i,:], wname, level=maxlevel)
+    decomposed = pywt.wavedec(datastream, wavelet, level=maxlevel)
 	# Destroy the approximation coefficients
-	c[0][:] = 0
+    decomposed[0][:] = 0
 	# Reconstruct the signal and save it
-	fdata[i,:] = pywt.waverec(c, wname)
+    filtered_data_stream = pywt.waverec(decomposed, wavelet)
+       
+    return filtered_data_stream
 
-	if fdata.shape[0] == 1:
-		spike_d = fdata.ravel() # If the signal is 1D, return a 1D array
-	else:
-		spike_d = fdata # Otherwise, give back the 2D array
+##################################################################
+############ - Perform Peak Detection on Datastream - ############
+def convolution_peak_detection(filtereddatastream, threshold, windowsize):
+    # initialise containers for detected peaks and their waveforms
+    peak_found_index = []
+    peak_found_waveform = []
+    datastream_length = int(len(filtereddatastream))
+    # Convolve window over every data position of datastream to find peaks
+    for x in range(int(windowsize/2),int(datastream_length-(windowsize/2))):
+        # get window values arround current datapoint
+        windowmin = int(x-(windowsize/2))                # minimum index for current location
+        windowmax = int(x+(windowsize/2))                # maximum index for current location
+        window = filtereddatastream[windowmin:windowmax]       # populate the window with in range values
 
-plt.plot(spike_d)
-plt.show()
+        # calculate mean of window for peak threshold decision
+        mean = abs(np.mean(window))
 
-# Convolve window to find peaks
-threshold = 0.9065
-x = 51
-for x in range(len(spike_d)-1):
-    # get window values
-    windowmin = x-50
-    windowmax = x+50
-    window = spike_d[windowmin:windowmax]
+        # determine posibility of peak by comparing current data point value to threshold
+        if (filtereddatastream[x] > mean+threshold):           # possible peaks when dava larger than mean + threshold
+            peak_pos = x                            # store potential peak position
 
-    mean = abs(np.mean(window))
+            # check it is largest of surrounding i.e. not false summit
+            window_surround = window[int((windowsize/2)-10):int((windowsize/2)+10)]      # create surrounding window 10 either side
 
+            # if current data point is largest in surrounding window - peak has been detected
+            if filtereddatastream[x] >= np.max(window_surround):
 
-    if (spike_d[x] > mean+threshold):
-        pssble_pk = 1
-    else:
-        pssble_pk = 0
-    
-    if pssble_pk == 1:
+                # check is actual peak not noise spike by verifying all surrounding datapoints above threshold
+                peak_points_above_thresh = 0        # initalise counter for points above threshold at peak
+                # check peak points 2 either side of possible peak
+                for x in range(8,12):
+                    # if the value being checked is greater than mean + 1/2 of threshold
+                    if window_surround[x] >= (mean + (threshold/2)):
+                        peak_points_above_thresh = peak_points_above_thresh + 1 # increment counter
+                # peak confirmed if more than 100 % was above threshold
+                if peak_points_above_thresh == 4:
+                    peak_found_index.append(peak_pos)       # add peak index to array
+                    peak_found_waveform.append(window)      # add peak waveform to array
 
+    # return arrays of peak index and waveforms found
+    return peak_found_index, peak_found_waveform
 
-        window_surround = window[40:60]
-        #if on largest in window
-        if spike_d[x] >= np.max(window_surround):
-            pk_in_window = 1
-        else:
-            pk_in_window = 0
+##############################################################################################
+################################## - Main Code Run - #########################################
 
-        if pk_in_window == 1:
-                peak_pos = x
-                index_found.append(peak_pos)
-                peak_found_waveform.append(window)
+# load the matlab data into variables
+datastream, Index, Class, sample_rate = load_training_dataset("training.mat")
 
+# filter the datastream using level 6 wavelet filter
+filtered_data_stream = wavelet_filter_datastream(datastream)
 
+# detect the peaks in the resulting datastream - store peak index and waveform in variables
+peak_found_index, peak_found_waveform = convolution_peak_detection(filtered_data_stream, 0.4896, 50)
 
+# sort know indexes into ascending order
 Index_sorted = sorted(Index, reverse=False)
-print(len(Index))
 
-index_found = list(dict.fromkeys(index_found))
-print(len(index_found))
+# print length of known indexes
+print(len(Index_sorted))
 
-fig, ax = plt.subplots(figsize=(15, 5))
+# print length of found indexes
+print(len(peak_found_index))
 
-for i in range(len(peak_found_waveform)):
-    ax.plot(peak_found_waveform[i])
+# plot all found waveforms of peaks on same axis to verify detection is finding peaks
+fig, ax = plt.subplots(figsize=(15, 5))         # use subplot for single axis
+for i in range(len(peak_found_waveform)):       # plot every waveform in peak detected waveform array
+    ax.plot(peak_found_waveform[i])             # subplot
+plt.show()                                      # show the plot of peak waveforms
 
-plt.show()
 
-
-
+# check if peak index found matches known peak index
 index_as_set = set(Index)
-intersection = index_as_set.intersection(index_found)
+intersection = index_as_set.intersection(peak_found_index)
 intersection_list = list(intersection)
 #print(intersection_list)
 print(len(intersection_list))
+
+# save as CSV
+np.savetxt("index.csv", Index_sorted, delimiter = ",")
+np.savetxt("index_found.csv", peak_found_index, delimiter = ",")
