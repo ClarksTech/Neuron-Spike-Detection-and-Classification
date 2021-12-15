@@ -51,7 +51,7 @@ def wavelet_filter_datastream(datastream):
 ############ - Perform Peak Detection on Datastream - ############
 def convolution_peak_detection(filtereddatastream, threshold, windowsize):
     # initialise containers for detected peaks and their waveforms
-    peak_found_index = []
+    peak_start_index = []
     peak_maxima_index = []
     peak_found_waveform = []
     datastream_length = int(len(filtereddatastream))
@@ -93,54 +93,57 @@ def convolution_peak_detection(filtereddatastream, threshold, windowsize):
                         if filtereddatastream[var] <= mean :                # check if point becomes reduced to mean signifying start of peak
                             count_below_mean = count_below_mean + 1
                         if count_below_mean >= 2:                           # if point has been below mean for 2 counts (anomalie rejection)
-                            peak_found_index.append(var)                    # when start point found store in holding array
+                            peak_start_index.append(var)                    # when start point found store in holding array
                             break
 
     # return arrays of peak index and waveforms found
-    return peak_found_index, peak_found_waveform, peak_maxima_index
+    return peak_start_index, peak_found_waveform, peak_maxima_index
 
 ##############################################################################################
 ################################## - Main Code Run - #########################################
 
-# load the matlab data into variables
-datastream, Index, Class, sample_rate = load_training_dataset("training.mat")
-#datastream, sample_rate = load_submission_dataset("submission.mat")
+test_peak_detection = 0
+if test_peak_detection == 1:
 
-# filter the datastream using level 6 wavelet filter
-filtered_data_stream = wavelet_filter_datastream(datastream)
+    # load the matlab data into variables
+    datastream, Index, Class, sample_rate = load_training_dataset("training.mat")
+    #datastream, sample_rate = load_submission_dataset("submission.mat")
 
-# detect the peaks in the resulting datastream - store peak index and waveform in variables 0.4896, 0.42
-peak_found_index, peak_found_waveform, peak_maxima_index= convolution_peak_detection(filtered_data_stream, 0.42, 50)
+    # filter the datastream using level 6 wavelet filter
+    filtered_data_stream = wavelet_filter_datastream(datastream)
 
-# sort know indexes into ascending order
-Index_sorted = sorted(Index, reverse=False)
+    # detect the peaks in the resulting datastream - store peak index and waveform in variables 0.4896, 0.42
+    peak_start_index, peak_found_waveform, peak_maxima_index= convolution_peak_detection(filtered_data_stream, 0.42, 50)
 
-# print length of known indexes
-print("known number of peaks: ", len(Index_sorted))
+    # sort know indexes into ascending order
+    Index_sorted = sorted(Index, reverse=False)
 
-# print length of found indexes
-print("Detected number of peaks: ", len(peak_found_index))
+    # print length of known indexes
+    print("known number of peaks: ", len(Index_sorted))
 
-# plot all found waveforms of peaks on same axis to verify detection is finding peaks
-fig, ax = plt.subplots(figsize=(15, 5))         # use subplot for single axis
-for i in range(len(peak_found_waveform)):       # plot every waveform in peak detected waveform array
-    ax.plot(peak_found_waveform[i])             # subplot
-plt.show()                                      # show the plot of peak waveforms
+    # print length of found indexes
+    print("Detected number of peaks: ", len(peak_maxima_index))
 
-# check if peak index found matches known peak index
-correct_index = []
-for x in range(len(peak_found_index)):
-    peak_start = peak_found_index[x]
-    # create range for initial peak start variance from maxima
-    for var in range((peak_start+10), (peak_start-10), -1):         # initial peak point may be within margine of error +-10 to expected position
-            if var in Index_sorted:                                 # check if potential peak start matches known index
-                correct_index.append(peak_start)                    # if found increment correct index counter
-                position_found = Index_sorted.index(var)
-                Index_sorted[position_found] = 0                    # set to 0 to avoid same point being identified as correct twice
-                break
-# display the number of correctly detected peaks and peake detection performance
-print("Number of detected peaks matching known peaks: ", len(correct_index), " Peak detection performance = ", len(correct_index)/len(Index_sorted))
+    # plot all found waveforms of peaks on same axis to verify detection is finding peaks
+    fig, ax = plt.subplots(figsize=(15, 5))         # use subplot for single axis
+    for i in range(len(peak_found_waveform)):       # plot every waveform in peak detected waveform array
+        ax.plot(peak_found_waveform[i])             # subplot
+    plt.show()                                      # show the plot of peak waveforms
 
-# save as CSV
-np.savetxt("index.csv", Index_sorted, delimiter = ",")
-np.savetxt("index_found.csv", peak_found_index, delimiter = ",")
+    # check if peak index found matches known peak index
+    correct_index = []
+    for x in range(len(peak_maxima_index)):
+        peak_start = peak_maxima_index[x]
+        # create range for initial peak start variance from maxima
+        for var in range((peak_start), (peak_start-50), -1):         # initial peak point may be within margine of error +-10 to expected position
+                if var in Index_sorted:                                 # check if potential peak start matches known index
+                    correct_index.append(peak_start)                    # if found increment correct index counter
+                    position_found = Index_sorted.index(var)
+                    Index_sorted[position_found] = 0                    # set to 0 to avoid same point being identified as correct twice
+                    break
+    # display the number of correctly detected peaks and peake detection performance
+    print("Number of detected peaks matching known peaks: ", len(correct_index), " Peak detection performance = ", len(correct_index)/len(Index_sorted))
+
+    # save as CSV
+    np.savetxt("index.csv", Index_sorted, delimiter = ",")
+    np.savetxt("index_found.csv", peak_maxima_index, delimiter = ",")
