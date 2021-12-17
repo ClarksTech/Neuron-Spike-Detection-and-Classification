@@ -117,20 +117,27 @@ print("CNN Predicts the correct class of neuron ", performance, "%")
 ########################################################################
 ###################### - Performance Metrics - #########################
 
+# get true positive, true negative, false positive, and false negative classifications for each class
 tp, tn, fp, fn = pm.get_confusion_matrix_params(test_class, training_test_predictions, 5)
 print("True Positives = ", tp)
 print("True Negative = ", tn)
 print("False Positives = ", fp)
 print("False Negatives = ", fn)
 
-# overall precision
+# Sum all classes for an overall metric
 TP = sum(tp)
 TN = sum(tn)
 FP = sum(fp)
 FN = sum(fn)
 
+# evaluate overall classification precision
 precision = TP/(TP+FP)
 print("Overall Precision = ", precision)
 
+# evaluate overall classification recall
+recall = TP/(TP+FN)
+print("Overall Recall = ", recall)
+
+# evaluate overall classification accuracy
 accuracy = (TP+TN)/(TP+FP+FN+TN)
 print("Overall Accuracy = ", accuracy)

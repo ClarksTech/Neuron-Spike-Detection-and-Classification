@@ -2,6 +2,7 @@ import scipy.io as spio
 import matplotlib.pyplot as plt
 import numpy as np
 import pywt
+import performance_metrics as pm
 
 
 ##################################################################
@@ -37,12 +38,11 @@ def wavelet_filter_datastream(datastream):
 
     # Initialize array for new filtered data
     filtered_data_stream = np.empty((1, len(datastream)))      
-    	
 	# Decompose the signal
     decomposed = pywt.wavedec(datastream, wavelet, level=maxlevel)
 	# Destroy the approximation coefficients
     decomposed[0][:] = 0
-	# Reconstruct the signal and save it
+	# Reconstruct the signal
     filtered_data_stream = pywt.waverec(decomposed, wavelet)
        
     return filtered_data_stream
@@ -99,12 +99,13 @@ def convolution_peak_detection(filtereddatastream, threshold, windowsize):
     # return arrays of peak index and waveforms found
     return peak_start_index, peak_found_waveform, peak_maxima_index
 
-##############################################################################################
-################################## - Main Code Run - #########################################
 
-# set to 1 to run verification of peak detection performance
-test_peak_detection = 0
-if test_peak_detection == 1:
+##################################################################
+#################### - Performance metrics - #####################
+
+
+test_peak_detection_performance = 0
+if test_peak_detection_performance == 1:
 
     # load the matlab data into variables
     datastream, Index, Class, sample_rate = load_training_dataset("training.mat")
@@ -116,35 +117,38 @@ if test_peak_detection == 1:
     # detect the peaks in the resulting datastream - store peak index and waveform in variables 0.4896, 0.42
     peak_start_index, peak_found_waveform, peak_maxima_index= convolution_peak_detection(filtered_data_stream, 0.42, 50)
 
-    # sort know indexes into ascending order
-    Index_sorted = sorted(Index, reverse=False)
-
     # print length of known indexes
-    print("known number of peaks: ", len(Index_sorted))
+    print("known number of peaks: ", len(Index))
 
     # print length of found indexes
     print("Detected number of peaks: ", len(peak_maxima_index))
 
-    # plot all found waveforms of peaks on same axis to verify detection is finding peaks
-    fig, ax = plt.subplots(figsize=(15, 5))         # use subplot for single axis
-    for i in range(len(peak_found_waveform)):       # plot every waveform in peak detected waveform array
-        ax.plot(peak_found_waveform[i])             # subplot
-    plt.show()                                      # show the plot of peak waveforms
+    # set to 1 to plot the peak waveforms detected by peak detection
+    plot_peaks = 0
+    if plot_peaks == 1:
+        # plot all found waveforms of peaks on same axis to verify detection is finding peaks
+        fig, ax = plt.subplots(figsize=(15, 5))         # use subplot for single axis
+        for i in range(len(peak_found_waveform)):       # plot every waveform in peak detected waveform array
+            ax.plot(peak_found_waveform[i])             # subplot
+        plt.show()         
 
-    # check if peak index found matches known peak index
-    correct_index = []
-    for x in range(len(peak_maxima_index)):
-        peak_start = peak_maxima_index[x]
-        # create range for initial peak start variance from maxima
-        for var in range((peak_start), (peak_start-50), -1):         # initial peak point may be within margine of error +-10 to expected position
-                if var in Index_sorted:                                 # check if potential peak start matches known index
-                    correct_index.append(peak_start)                    # if found increment correct index counter
-                    position_found = Index_sorted.index(var)
-                    Index_sorted[position_found] = 0                    # set to 0 to avoid same point being identified as correct twice
-                    break
-    # display the number of correctly detected peaks and peake detection performance
-    print("Number of detected peaks matching known peaks: ", len(correct_index), " Peak detection performance = ", len(correct_index)/len(Index_sorted))
+    # get the correct and incorrect peak index lists
+    incorrect_peak_index, correct_peak_index = pm.get_peak_detection_correct_and_incorrect_index(Index, peak_maxima_index)
 
-    # save as CSV
-    #np.savetxt("index.csv", Index_sorted, delimiter = ",")
-    #np.savetxt("index_found.csv", peak_maxima_index, delimiter = ",")
+    # get the true positive, false positive, true negative and false negative peak detections
+    tp, fp, tn, fn = pm.get_peak_detection_tn_fn(Index, incorrect_peak_index, correct_peak_index, len(datastream))
+
+    # print the true positive, false positive, true negative, and false negative values for peak detection
+    print("Peak Detection TP=", tp, " FP=", fp," TN=", tn, " FN=", fn)
+
+    # evaluate peak detection precision
+    precision = tp/(tp+fp)
+    print("Overall Precision = ", precision)
+
+    # evaluate peak detection recall
+    recall = tp/(tp+fn)
+    print("Overall Recall = ", recall)
+
+    # evaluate peak detection accuracy
+    accuracy = (tp+tn)/(tp+fp+fn+tn)
+    print("Overall Accuracy = ", accuracy)
