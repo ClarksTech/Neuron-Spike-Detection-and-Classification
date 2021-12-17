@@ -1,6 +1,6 @@
 import numpy as np
 from tensorflow import keras
-from tensorflow.keras import callbacks, layers
+from tensorflow.keras import layers
 import convolutional_peak_detection as pd
 from keras.callbacks import EarlyStopping
 from matplotlib import pyplot
