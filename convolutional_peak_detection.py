@@ -146,5 +146,5 @@ if test_peak_detection == 1:
     print("Number of detected peaks matching known peaks: ", len(correct_index), " Peak detection performance = ", len(correct_index)/len(Index_sorted))
 
     # save as CSV
-    np.savetxt("index.csv", Index_sorted, delimiter = ",")
-    np.savetxt("index_found.csv", peak_maxima_index, delimiter = ",")
+    #np.savetxt("index.csv", Index_sorted, delimiter = ",")
+    #np.savetxt("index_found.csv", peak_maxima_index, delimiter = ",")
