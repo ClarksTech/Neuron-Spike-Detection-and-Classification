@@ -102,6 +102,7 @@ def convolution_peak_detection(filtereddatastream, threshold, windowsize):
 ##############################################################################################
 ################################## - Main Code Run - #########################################
 
+# set to 1 to run verification of peak detection performance
 test_peak_detection = 0
 if test_peak_detection == 1:
 
