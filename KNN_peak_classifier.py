@@ -80,6 +80,7 @@ for i, sample in enumerate(test_data):
     else:
         scorecard.append(0)
     pass
+
 # Calculate the performance score, the fraction of correct answers
 scorecard_array = numpy.asarray(scorecard)
 print("Performance = ", (scorecard_array.sum() / scorecard_array.size) * 100, '%')
@@ -87,27 +88,19 @@ print("Performance = ", (scorecard_array.sum() / scorecard_array.size) * 100, '%
 ######################################################################################
 ############################ - Performance Metrics - #################################
 
-# get true positive, true negative, false positive, and false negative classifications for each class
-tp, tn, fp, fn = pm.get_confusion_matrix_params(test_class, pred, 5)
-print("True Positives = ", tp)
-print("True Negative = ", tn)
-print("False Positives = ", fp)
-print("False Negatives = ", fn)
+# set to 1 to assess performance of CNN on classifying peaks from training dataset
+test_KNN_performance = 1
+if test_KNN_performance == 1:
 
-# Sum all classes for an overall metric
-TP = sum(tp)
-TN = sum(tn)
-FP = sum(fp)
-FN = sum(fn)
+    # get true positive, true negative, false positive, and false negative classifications for each class
+    tp, tn, fp, fn = pm.get_confusion_matrix_params(test_class, pred, 5)
+    print("True Positives = ", tp)      # print true positive array
+    print("True Negative = ", tn)       # print true negative array
+    print("False Positives = ", fp)     # print false positive array
+    print("False Negatives = ", fn)     # print false negative array
 
-# evaluate overall classification precision
-precision = TP/(TP+FP)
-print("Overall Precision = ", precision)
-
-# evaluate overall classification recall
-recall = TP/(TP+FN)
-print("Overall Recall = ", recall)
-
-# evaluate overall classification accuracy
-accuracy = (TP+TN)/(TP+FP+FN+TN)
-print("Overall Accuracy = ", accuracy)
+    # Print the performance metrics Precision, Recall, and F1-Score for each class (closer to 1 is better)
+    for i in range(5):          # for each class
+        class_number = i+1      # class number + 1 as count starts at 0 but class index starts at 1
+        precision, recall, F1_score = pm.gen_performance_metrics(tp[i], tn[i], fp[i], fn[i])                                        # generate the performance metrics
+        print("Class ", class_number, " Perfromance Metrics: Precision=", precision, " Recall=", recall, " F1-score=", F1_score)    # print performance etrics for class
