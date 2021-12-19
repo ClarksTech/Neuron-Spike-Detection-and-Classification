@@ -125,7 +125,7 @@ def get_confusion_matrix_params(known_values, predicted_values, num_classes):
     if verify == 1:
         # for each class
         for i in range(num_classes):
-            print("Does Confusion Matrix of class ", i, " sum to Samples? ", true_positive[i] + false_positive[i] + false_negative[i] + true_negative[i] == len(known_values)) # compare sum to total number of values
+            print("Does Confusion Matrix of class ", i+1, " sum to Samples? ", true_positive[i] + false_positive[i] + false_negative[i] + true_negative[i] == len(known_values)) # compare sum to total number of values
 
     # return the confusion matrix parameters
     return true_positive, true_negative, false_positive, false_negative
