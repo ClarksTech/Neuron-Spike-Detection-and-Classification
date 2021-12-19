@@ -139,7 +139,7 @@ if test_peak_detection_performance == 1:
     incorrect_peak_index, correct_peak_index = pm.get_peak_detection_correct_and_incorrect_index(Index, peak_maxima_index)
 
     # get the true positive, false positive, true negative and false negative peak detections
-    tp, fp, tn, fn = pm.get_peak_detection_tn_fn(Index, incorrect_peak_index, correct_peak_index, len(datastream))
+    tp, fp, tn, fn = pm.get_peak_detection_confusion_matrix_params(Index, incorrect_peak_index, correct_peak_index, len(datastream))
 
     # print the true positive, false positive, true negative, and false negative values for peak detection
     print("Peak Detection TP=", tp, " FP=", fp," TN=", tn, " FN=", fn)
@@ -155,3 +155,7 @@ if test_peak_detection_performance == 1:
     # evaluate peak detection accuracy
     accuracy = (tp+tn)/(tp+fp+fn+tn)
     print("Overall Accuracy = ", accuracy)
+
+    # evaluate F1-Score
+    f1 = 2*((precision*recall)/(precision+recall))
+    print("F1 - Score = ", f1)

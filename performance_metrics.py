@@ -36,7 +36,7 @@ def get_peak_detection_correct_and_incorrect_index(known_index, predicted_index)
 
 ######################################################################################
 ################## - Peak Detection Confusion Matrix Parameters - ####################
-def get_peak_detection_tn_fn(known_index, incorrect_predicted_index, correct_predicted_index, num_samples):
+def get_peak_detection_confusion_matrix_params(known_index, incorrect_predicted_index, correct_predicted_index, num_samples):
 
     # initialise counters
     true_negative = 0

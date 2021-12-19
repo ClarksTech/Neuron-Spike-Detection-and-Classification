@@ -146,3 +146,8 @@ print("Overall Recall = ", recall)
 # evaluate overall classification accuracy
 accuracy = (TP+TN)/(TP+FP+FN+TN)
 print("Overall Accuracy = ", accuracy)
+
+# evaluate F1-Score
+f1 = 2*((precision*recall)/(precision+recall))
+print("F1 - Score = ", f1)
+
