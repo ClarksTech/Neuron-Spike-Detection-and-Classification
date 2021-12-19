@@ -105,7 +105,7 @@ def convolution_peak_detection(filtereddatastream, threshold, windowsize):
 ######################################################################################
 ############################## - Performance metrics - ###############################
 
-
+# set to 1 to obtain performance metrics for peak detection
 test_peak_detection_performance = 0
 if test_peak_detection_performance == 1:
 
@@ -143,18 +143,5 @@ if test_peak_detection_performance == 1:
     # print the true positive, false positive, true negative, and false negative values for peak detection
     print("Peak Detection TP=", tp, " FP=", fp," TN=", tn, " FN=", fn)
 
-    # evaluate peak detection precision
-    precision = tp/(tp+fp)
-    print("Overall Precision = ", precision)
-
-    # evaluate peak detection recall
-    recall = tp/(tp+fn)
-    print("Overall Recall = ", recall)
-
-    # evaluate peak detection accuracy
-    accuracy = (tp+tn)/(tp+fp+fn+tn)
-    print("Overall Accuracy = ", accuracy)
-
-    # evaluate F1-Score
-    f1 = 2*((precision*recall)/(precision+recall))
-    print("F1 - Score = ", f1)
+    precision, recall, F1_score = pm.gen_performance_metrics(tp[i], tn[i], fp[i], fn[i])
+    print("Perfromance Metrics: Precision=", precision, " Recall=", recall, " F1-score=", F1_score)
