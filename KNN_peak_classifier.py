@@ -1,14 +1,15 @@
-# Numpy for useful maths
+######################################################################################
+############################### - Import Libraries - #################################
+
 import numpy
-# Sklearn contains some useful CI tools
-# PCA
 from sklearn.decomposition import PCA
-# k Nearest Neighbour
 from sklearn.neighbors import KNeighborsClassifier
-# Matplotlib for plotting
 import matplotlib.pyplot as plt
 import convolutional_peak_detection as pd
+import performance_metrics as pm
 
+######################################################################################
+################### - Data Extraction, Proccessing, Splitting - ######################
 
 # the data, split to test and train sets
 data_stream, Index, Class, sample_rate = pd.load_training_dataset("training.mat")
@@ -34,6 +35,9 @@ train_labels = train_class
 test_data = test_waveforms
 test_labels = test_class
 
+######################################################################################
+#################################### - PCA - #########################################
+
 # Select number of components to extract
 pca = PCA(n_components = 6)
 
@@ -54,6 +58,9 @@ plt.show()
 train_ext = pca.fit_transform(train_data)
 # Transform the test data using the same components
 test_ext = pca.transform(test_data)
+
+######################################################################################
+#################################### - KNN - #########################################
 
 # Create a KNN classification system with k = 5
 # Uses the p2 (Euclidean) norm
@@ -76,3 +83,31 @@ for i, sample in enumerate(test_data):
 # Calculate the performance score, the fraction of correct answers
 scorecard_array = numpy.asarray(scorecard)
 print("Performance = ", (scorecard_array.sum() / scorecard_array.size) * 100, '%')
+
+######################################################################################
+############################ - Performance Metrics - #################################
+
+# get true positive, true negative, false positive, and false negative classifications for each class
+tp, tn, fp, fn = pm.get_confusion_matrix_params(test_class, pred, 5)
+print("True Positives = ", tp)
+print("True Negative = ", tn)
+print("False Positives = ", fp)
+print("False Negatives = ", fn)
+
+# Sum all classes for an overall metric
+TP = sum(tp)
+TN = sum(tn)
+FP = sum(fp)
+FN = sum(fn)
+
+# evaluate overall classification precision
+precision = TP/(TP+FP)
+print("Overall Precision = ", precision)
+
+# evaluate overall classification recall
+recall = TP/(TP+FN)
+print("Overall Recall = ", recall)
+
+# evaluate overall classification accuracy
+accuracy = (TP+TN)/(TP+FP+FN+TN)
+print("Overall Accuracy = ", accuracy)

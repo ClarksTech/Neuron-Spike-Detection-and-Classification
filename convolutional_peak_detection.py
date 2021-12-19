@@ -1,3 +1,6 @@
+######################################################################################
+############################### - Import Libraries - #################################
+
 import scipy.io as spio
 import matplotlib.pyplot as plt
 import numpy as np
@@ -5,8 +8,8 @@ import pywt
 import performance_metrics as pm
 
 
-##################################################################
-################# - Import the training dataset - ################
+######################################################################################
+########################### - Import the training dataset - ##########################
 def load_training_dataset(dataset):
     # import from matlab file type to store in arrays
     dataset_all = spio.loadmat(dataset, squeeze_me=True)
@@ -18,8 +21,8 @@ def load_training_dataset(dataset):
     # return all arrays containing training dataset values and known sample rate
     return Data_stream, Index, Class, sample_rate
 
-##################################################################
-############### - Import the submission dataset - ################
+######################################################################################
+######################### - Import the submission dataset - ##########################
 def load_submission_dataset(dataset):
     # import from matlab file type to store in arrays
     dataset_all = spio.loadmat(dataset, squeeze_me=True)
@@ -29,8 +32,8 @@ def load_submission_dataset(dataset):
     # return all arrays containing training dataset values and known sample rate
     return Data_stream, sample_rate
 
-##################################################################
-########## - Perform Wavelet Filtering on Datastream - ###########
+######################################################################################
+#################### - Perform Wavelet Filtering on Datastream - #####################
 def wavelet_filter_datastream(datastream):
     # using Daubechies(4) wavelet filter
     wavelet = "db4"    
@@ -47,8 +50,8 @@ def wavelet_filter_datastream(datastream):
        
     return filtered_data_stream
 
-##################################################################
-############ - Perform Peak Detection on Datastream - ############
+######################################################################################
+###################### - Perform Peak Detection on Datastream - ######################
 def convolution_peak_detection(filtereddatastream, threshold, windowsize):
     # initialise containers for detected peaks and their waveforms
     peak_start_index = []
@@ -100,8 +103,8 @@ def convolution_peak_detection(filtereddatastream, threshold, windowsize):
     return peak_start_index, peak_found_waveform, peak_maxima_index
 
 
-##################################################################
-#################### - Performance metrics - #####################
+######################################################################################
+############################## - Performance metrics - ###############################
 
 
 test_peak_detection_performance = 0

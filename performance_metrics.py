@@ -1,8 +1,11 @@
+######################################################################################
+############################### - Import Libraries - #################################
+
 from sklearn.metrics import confusion_matrix
 import numpy as np 
 
-##################################################################
-######## - Identify correct and incorrect peak indexes - #########
+######################################################################################
+################## - Identify correct and incorrect peak indexes - ###################
 def get_peak_detection_correct_and_incorrect_index(known_index, predicted_index):
 
     # sort know indexes into ascending order
@@ -31,8 +34,8 @@ def get_peak_detection_correct_and_incorrect_index(known_index, predicted_index)
     return incorrect_predict_index, correct_predict_index
 
 
-##################################################################
-######## - Peak Detection Confusion Matrix Parameters - ##########
+######################################################################################
+################## - Peak Detection Confusion Matrix Parameters - ####################
 def get_peak_detection_tn_fn(known_index, incorrect_predicted_index, correct_predicted_index, num_samples):
 
     # initialise counters
@@ -83,8 +86,8 @@ def get_peak_detection_tn_fn(known_index, incorrect_predicted_index, correct_pre
 
 
 
-##################################################################
-########## - Classifier Confusion Matrix parameters - ############
+######################################################################################
+#################### - Classifier Confusion Matrix parameters - ######################
 def get_confusion_matrix_params(known_values, predicted_values, num_classes):
 
     # Generate the confustion matrix for all known and test results

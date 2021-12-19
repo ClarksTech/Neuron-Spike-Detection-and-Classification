@@ -1,3 +1,6 @@
+######################################################################################
+############################### - Import Libraries - #################################
+
 import numpy as np
 from tensorflow import keras
 from tensorflow.keras import layers
@@ -6,6 +9,8 @@ from keras.callbacks import EarlyStopping
 from matplotlib import pyplot
 import performance_metrics as pm
 
+######################################################################################
+################### - Data Extraction, Proccessing, Splitting - ######################
 
 # the data, split to test and train sets
 data_stream, Index, Class, sample_rate = pd.load_training_dataset("training.mat")
@@ -114,8 +119,8 @@ for x in range(len(test_class)):
 performance = correct_count/len(test_class)
 print("CNN Predicts the correct class of neuron ", performance, "%")
 
-########################################################################
-###################### - Performance Metrics - #########################
+######################################################################################
+############################# - Performance Metrics - ################################
 
 # get true positive, true negative, false positive, and false negative classifications for each class
 tp, tn, fp, fn = pm.get_confusion_matrix_params(test_class, training_test_predictions, 5)
