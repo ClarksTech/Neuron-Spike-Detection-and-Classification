@@ -130,4 +130,19 @@ def get_confusion_matrix_params(known_values, predicted_values, num_classes):
     # return the confusion matrix parameters
     return true_positive, true_negative, false_positive, false_negative
 
-    
+
+######################################################################################
+######################## - Calculate Performance Metrics - ###########################
+def gen_performance_metrics(true_positive, true_negative, false_positive, false_negative):
+
+    # evaluate classification precision
+    precision = true_positive/(true_positive+false_positive)
+
+    # evaluate classification recall
+    recall = true_positive/(true_positive+false_negative)
+
+    # evaluate F1-Score
+    F1_score = 2*((precision*recall)/(precision+recall))
+
+    # return precision, recall, and F1 score performance metrics for given confusion matrix params
+    return precision, recall, F1_score
