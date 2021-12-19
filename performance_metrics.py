@@ -90,6 +90,10 @@ def get_peak_detection_confusion_matrix_params(known_index, incorrect_predicted_
 #################### - Classifier Confusion Matrix parameters - ######################
 def get_confusion_matrix_params(known_values, predicted_values, num_classes):
 
+    # decrement classes to start count from 0
+    predicted_values[:] = [Class - 1 for Class in predicted_values]
+    known_values[:] = [Class - 1 for Class in known_values]
+
     # Generate the confustion matrix for all known and test results
     confusion_mtrx = confusion_matrix(known_values, predicted_values)
 
