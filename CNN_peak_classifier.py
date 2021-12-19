@@ -123,7 +123,7 @@ def CNN_classifier(train_waveforms, train_class, test_waveforms, test_class, bat
     return test_class_predictions
 
 ######################################################################################
-############################# - Performance Metrics - ################################
+########################## - Test Performance Metrics - ##############################
 
 
 test_CNN_performance = 1
@@ -142,25 +142,8 @@ if test_CNN_performance == 1:
     print("False Positives = ", fp)
     print("False Negatives = ", fn)
 
-    # Sum all classes for an overall metric
-    TP = sum(tp)
-    TN = sum(tn)
-    FP = sum(fp)
-    FN = sum(fn)
-
-    # evaluate overall classification precision
-    precision = TP/(TP+FP)
-    print("Overall Precision = ", precision)
-
-    # evaluate overall classification recall
-    recall = TP/(TP+FN)
-    print("Overall Recall = ", recall)
-
-    # evaluate overall classification accuracy
-    accuracy = (TP+TN)/(TP+FP+FN+TN)
-    print("Overall Accuracy = ", accuracy)
-
-    # evaluate F1-Score
-    f1 = 2*((precision*recall)/(precision+recall))
-    print("F1 - Score = ", f1)
+    for i in range(5):
+        class_number = i+1
+        precision, recall, F1_score = pm.gen_performance_metrics(tp[i], tn[i], fp[i], fn[i])
+        print("Class ", class_number, " Perfromance Metrics: Precision=", precision, " Recall=", recall, " F1-score=", F1_score)
 
