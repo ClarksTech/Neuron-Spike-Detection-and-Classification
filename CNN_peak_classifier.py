@@ -76,7 +76,7 @@ def non_ideal_data_preperation(data_file):
         correct_predicted_index_waveforms.append(filtered_data_stream[windowmin:windowmax])   # add waveform window to list
 
     # split 70/30 index and waveforms 85% train (including 15% for validation) 15% test
-    split_len = int(0.85*len(Index))                # define list split point as 85%
+    split_len = int(0.85*len(correct_predict_maxima_index))                # define list split point as 85%
     train_class = correct_predict_maxima_class[:split_len]                 # store first 85% in training class list
     train_waveforms = correct_predicted_index_waveforms[:split_len]   # store first 85% in training waveforms list
     test_class = correct_predict_maxima_class[split_len:]                  # store last 15% in test class list
