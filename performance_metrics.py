@@ -6,7 +6,7 @@ import numpy as np
 
 ######################################################################################
 ################## - Identify correct and incorrect peak indexes - ###################
-def get_peak_detection_correct_and_incorrect_index(known_index, predicted_index):
+def get_peak_detection_correct_and_incorrect_index(known_index, Class, predicted_index):
 
     # sort know indexes into ascending order
     known_index = sorted(known_index, reverse=False)
@@ -15,6 +15,7 @@ def get_peak_detection_correct_and_incorrect_index(known_index, predicted_index)
     correct_predict_index = []
     incorrect_predict_index = []
     correct_predict_maxima_index = []
+    correct_predict_maxima_class = []
 
     # loop through all predicted indexes
     for x in range(len(predicted_index)):
@@ -26,6 +27,7 @@ def get_peak_detection_correct_and_incorrect_index(known_index, predicted_index)
                     correct_predict_index.append(var)           # if found save correct peak position to correct peak index
                     correct_predict_maxima_index.append(peak)   # if found save the prodicted peak maxima
                     position_found = known_index.index(var)     # get position of the peak within known index
+                    correct_predict_maxima_class.append(Class[position_found])
                     known_index[position_found] = 0             # set position to 0 to avoid same point being identified as correct twice
                     peak_found = 1
                     break
@@ -33,7 +35,7 @@ def get_peak_detection_correct_and_incorrect_index(known_index, predicted_index)
             incorrect_predict_index.append(peak)                # add to incorrect peak list             
 
     # return correct and incorrect peak index location lists
-    return incorrect_predict_index, correct_predict_index, correct_predict_maxima_index
+    return incorrect_predict_index, correct_predict_index, correct_predict_maxima_index, correct_predict_maxima_class
 
 
 ######################################################################################

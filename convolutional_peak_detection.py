@@ -135,7 +135,7 @@ if test_peak_detection_performance == 1:
         plt.show()         
 
     # get the correct and incorrect peak index lists
-    incorrect_peak_index, correct_peak_index, correct_predict_maxima_index = pm.get_peak_detection_correct_and_incorrect_index(Index, peak_maxima_index)
+    incorrect_peak_index, correct_peak_index, correct_predict_maxima_index, correct_predict_maxima_class = pm.get_peak_detection_correct_and_incorrect_index(Index, Class, peak_maxima_index)
 
     # get the true positive, false positive, true negative and false negative peak detections
     tp, fp, tn, fn = pm.get_peak_detection_confusion_matrix_params(Index, incorrect_peak_index, correct_peak_index, len(datastream))
