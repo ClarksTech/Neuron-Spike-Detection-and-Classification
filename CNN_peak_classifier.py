@@ -213,7 +213,8 @@ if test_CNN_performance == 1:
 
 ######################################################################################
 ############################ - Call SA Optimisation - ################################
-
+optimise_CNN_performance = 0
+if optimise_CNN_performance == 1:
     # supply SA with non-optimised hyper parameters
     supply = [32, 64, 128, 64, 3, 3, 3, 1, 0.2, 0.35]   # CNN hyper parameters supplied to the SA for optimisation
     demand = [1, 1, 1, 1, 1]                            # the solution demand matrix (matrix of F1-score for each classificatio class where 1 = perfect)
@@ -272,32 +273,32 @@ if test_CNN_performance == 1:
 ######################################################################################
 ########## - Display improvement of performance metrics by optimisation - ############
 
-for i in range(5):
-    # create list of class performance metrics pre and post optimisation
-    non_optimised = [precision[i], recall[i], f1_score[i]]
-    optimised = [sa_precision[i], sa_recall[i], sa_f1_score[i]]
+    for i in range(5):
+        # create list of class performance metrics pre and post optimisation
+        non_optimised = [precision[i], recall[i], f1_score[i]]
+        optimised = [sa_precision[i], sa_recall[i], sa_f1_score[i]]
 
-    # create list of metric titles for the comparison
-    metric = ["Precision", "Recall", "F1-score"]
+        # create list of metric titles for the comparison
+        metric = ["Precision", "Recall", "F1-score"]
 
-    # set the number of indicies on bar graph and their width
-    indices = np.arange(3)  # 5 performance metric indicies
-    width = 0.20            # width of 0.2
+        # set the number of indicies on bar graph and their width
+        indices = np.arange(3)  # 5 performance metric indicies
+        width = 0.20            # width of 0.2
 
-    # Plot the bars for the non-optimised CNN performance metrics
-    pyplot.bar(indices, non_optimised, width=width)
+        # Plot the bars for the non-optimised CNN performance metrics
+        pyplot.bar(indices, non_optimised, width=width)
 
-    # Offsetting by width plot the bars for the optimised CNN performance metrics
-    pyplot.bar(indices + width, optimised, width=width)
+        # Offsetting by width plot the bars for the optimised CNN performance metrics
+        pyplot.bar(indices + width, optimised, width=width)
 
-    # add the metric titles
-    pyplot.xticks(ticks=indices, labels=metric)
+        # add the metric titles
+        pyplot.xticks(ticks=indices, labels=metric)
 
-    # add bar chart labels
-    pyplot.xlabel("Performance Metric")     # x axis is performance metric
-    pyplot.ylabel("Performance")      # y axis is performance in range 0 to 1 (1 being best)
-    Class = i+1
-    pyplot.title("Class %i Performance metrics before and after SA" %Class)   # title the bar graph so the class it is 
+        # add bar chart labels
+        pyplot.xlabel("Performance Metric")     # x axis is performance metric
+        pyplot.ylabel("Performance")      # y axis is performance in range 0 to 1 (1 being best)
+        Class = i+1
+        pyplot.title("Class %i Performance metrics before and after SA" %Class)   # title the bar graph so the class it is 
 
-    pyplot.show()
+        pyplot.show()
 
