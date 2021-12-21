@@ -7,6 +7,7 @@ import convolutional_peak_detection as pd
 from keras.callbacks import EarlyStopping
 from matplotlib import pyplot
 import performance_metrics as pm
+import CNN_simulated_annealing as sa
 
 
 ######################################################################################
@@ -147,8 +148,101 @@ if test_CNN_performance == 1:
     print("False Negatives = ", fn)     # print false negative array
 
     # Print the performance metrics Precision, Recall, and F1-Score for each class (closer to 1 is better)
+    f1_score = []   # container for later comparison
+    precision = []  # container for later comparison
+    recall = []     # container for later comparison
     for i in range(5):          # for each class
         class_number = i+1      # class number + 1 as count starts at 0 but class index starts at 1
-        precision, recall, F1_score = pm.gen_performance_metrics(tp[i], tn[i], fp[i], fn[i])                                        # generate the performance metrics
-        print("Class ", class_number, " Perfromance Metrics: Precision=", precision, " Recall=", recall, " F1-score=", F1_score)    # print performance etrics for class
+        Precision, Recall, F1_score = pm.gen_performance_metrics(tp[i], tn[i], fp[i], fn[i])                                        # generate the performance metrics
+        f1_score.append(F1_score)         # store for comparison
+        precision.append(Precision)       # store for comparison
+        recall.append(Recall)             # store for comparison
+        print("Class ", class_number, " Perfromance Metrics: Precision=", Precision, " Recall=", Recall, " F1-score=", F1_score)    # print performance etrics for class
+
+######################################################################################
+############################ - Call SA Optimisation - ################################
+
+    # supply SA with non-optimised hyper parameters
+    supply = [32, 64, 128, 64, 3, 3, 3, 1, 0.2, 0.35]   # CNN hyper parameters supplied to the SA for optimisation
+    demand = [1, 1, 1, 1, 1]                            # the solution demand matrix (matrix of F1-score for each classificatio class where 1 = perfect)
+
+    # set SA parameters
+    alpha = 0.80    # decrement temperature by 20% after each complete iteration cycle
+    iterations = 5  # perfore 5 itterations at each temperature
+
+    # run simmulated annealing
+    final_solution, cost, cost_values, f1_scores = sa.anneal(supply,demand,alpha,iterations) # get a final optimised solution from simulated annealing
+
+    # print the demand, final solution, its cost, and f1-scores
+    print("Demand: ", demand)
+    print("Final Solution: ", final_solution)
+    print("Final Cost: ", cost)
+    print("Final F1-Scores: ", f1_scores)
+
+    # plot the history of simulated annealing cost values for visual inspection
+    pyplot.title("Error Function in Simmulated Annealing")
+    pyplot.plot(cost_values)
+    pyplot.grid(True)        
+    pyplot.show()
+
+######################################################################################
+###################### - Optimised CNN Performance metrics - #########################
+
+    # prepare the ideal data for the CNN - using known peak locations so evaluation is of classification only
+    training_waveforms, training_class, test_waveforms, test_class = ideal_data_preperation("training.mat")
+
+    # create and train the CNN, producng predicted classes for input waveforms
+    test_class_predictions = sa.CNN_classifier(training_waveforms, training_class, test_waveforms, test_class, batch_size=128, epochs=100, optimisation_params=final_solution )
+
+    # get true positive, true negative, false positive, and false negative classifications for each class
+    sa_tp, sa_tn, sa_fp, sa_fn = pm.get_confusion_matrix_params(test_class, test_class_predictions, 5)
+    print("True Positives = ", sa_tp)      # print true positive array
+    print("True Negative = ", sa_tn)       # print true negative array
+    print("False Positives = ", sa_fp)     # print false positive array
+    print("False Negatives = ", sa_fn)     # print false negative array
+
+    # Print the performance metrics Precision, Recall, and F1-Score for each class (closer to 1 is better)
+    sa_f1_score = []    # container for comparison
+    sa_precision = []   # container for comparison
+    sa_recall = []      # container for comparison
+    for i in range(5):          # for each class
+        class_number = i+1      # class number + 1 as count starts at 0 but class index starts at 1
+        sa_Precision, sa_Recall, sa_F1_score = pm.gen_performance_metrics(sa_tp[i], sa_tn[i], sa_fp[i], sa_fn[i])                       # generate the performance metrics
+        sa_f1_score.append(sa_F1_score)         # store for comparison
+        sa_precision.append(sa_Precision)       # store for comparison
+        sa_recall.append(sa_Recall)             # store for comparison
+        print("Class ", class_number, " Perfromance Metrics: Precision=", sa_Precision, " Recall=", sa_Recall, " F1-score=", sa_F1_score)        # print performance etrics for class
+
+
+######################################################################################
+########## - Display improvement of performance metrics by optimisation - ############
+
+for i in range(5):
+    # create list of class performance metrics pre and post optimisation
+    non_optimised = [precision[i], recall[i], f1_score[i]]
+    optimised = [sa_precision[i], sa_recall[i], sa_f1_score[i]]
+
+    # create list of metric titles for the comparison
+    metric = ["Precision", "Recall", " F1-score"]
+
+    # set the number of indicies on bar graph and their width
+    indices = np.arange(3)  # 5 performance metric indicies
+    width = 0.20            # width of 0.2
+
+    # Plot the bars for the non-optimised CNN performance metrics
+    pyplot.bar(indices, non_optimised, width=width)
+
+    # Offsetting by width plot the bars for the optimised CNN performance metrics
+    pyplot.bar(indices + width, optimised, width=width)
+
+    # add the metric titles
+    pyplot.xticks(ticks=indices, labels=metric)
+
+    # add bar chart labels
+    pyplot.xlabel("Performance Metric")     # x axis is performance metric
+    pyplot.ylabel("Performance")      # y axis is performance in range 0 to 1 (1 being best)
+    Class = i+1
+    pyplot.title("Class %i Performance metrics before and after SA" %Class)   # title the bar graph so the class it is 
+
+    pyplot.show()
 
