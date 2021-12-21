@@ -72,14 +72,14 @@ def CNN_classifier(train_waveforms, train_class, test_waveforms, test_class, bat
             # padding for convolution has also been set to same - meaning when the window being convolved falls outside 
             # origional dimensions, the excess is set to the same as the last value within dimension
             keras.Input(shape=input_shape),                                         # set the CNN input to (50,1) as defined earlier
-            layers.Conv1D(32, padding="same", kernel_size=7, activation="relu"),    # first layer is a convolutional layer - kernal size 7 is large with fewer fiters to capture large initial features
+            layers.Conv1D(32, padding="same", kernel_size=3, activation="relu"),    # first layer is a convolutional layer - kernal size 3 is with fewer fiters to capture large initial features
             layers.MaxPooling1D(pool_size=2),                                       # max pooling of window size 2 used to half dimensions, keeping trainable paramaters down
             layers.Dropout(0.2),                                                    # dropout layer helps prevent overfitting by randomly dropping 20% of the nodes to the next layer
-            layers.Conv1D(64, padding="same", kernel_size=5, activation="relu"),    # second convolution layer reduces the kernal size to focus on medium sized feature - as such number of filters increased
+            layers.Conv1D(64, padding="same", kernel_size=3, activation="relu"),    # second convolution layer increases number of filters to capture more features
             layers.MaxPooling1D(pool_size=2),                                       # max pooling of window size 2 used to half dimensions, keeping trainable paramaters down
-            layers.Dropout(0.2),                                                    # dropout layer helps prevent overfitting by randomly dropping 20% of the nodes to the next layer
-            layers.Conv1D(128, padding="same", kernel_size=3, activation="relu"),   # third convolution layer further reduces kernal size and increases number of filters - as such focuses on small features seperating classes
-            layers.Conv1D(32, padding="same", kernel_size=1, activation="relu"),    # kernal size of 1 is used to decrease the number of features from 128 to 32 acting as channel-wide pooling for dimensionality reduction
+            layers.Dropout(0.35),                                                   # dropout layer helps prevent overfitting by randomly dropping 0.35% of the nodes to the next layer
+            layers.Conv1D(128, padding="same", kernel_size=3, activation="relu"),   # third convolution layer further increases number of filters capturing small features
+            layers.Conv1D(64, padding="same", kernel_size=1, activation="relu"),    # kernal size of 1 is used to decrease the number of features from 128 to 64 acting as channel-wide pooling for dimensionality reduction
             layers.Flatten(),                                                       # flatten converts the multi dimension output of convolution to a single dimension array
             layers.Dense(num_classes, activation="softmax"),                        # dense converts the dimensions of the output equal to that of the number of classes, soft max uses probabalistic values to determine which class the it is most likely belonging to
         ]
