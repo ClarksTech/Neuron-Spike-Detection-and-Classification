@@ -14,6 +14,7 @@ def get_peak_detection_correct_and_incorrect_index(known_index, predicted_index)
     # containers for the correct and incorrect peak indexes
     correct_predict_index = []
     incorrect_predict_index = []
+    correct_predict_maxima_index = []
 
     # loop through all predicted indexes
     for x in range(len(predicted_index)):
@@ -23,6 +24,7 @@ def get_peak_detection_correct_and_incorrect_index(known_index, predicted_index)
         for var in range((peak), (peak-50), -1):                # initial peak point may be within margine of error -50 to expected position
                 if var in known_index:                          # check if potential peak start matches known index
                     correct_predict_index.append(var)           # if found save correct peak position to correct peak index
+                    correct_predict_maxima_index.append(peak)   # if found save the prodicted peak maxima
                     position_found = known_index.index(var)     # get position of the peak within known index
                     known_index[position_found] = 0             # set position to 0 to avoid same point being identified as correct twice
                     peak_found = 1
@@ -31,7 +33,7 @@ def get_peak_detection_correct_and_incorrect_index(known_index, predicted_index)
             incorrect_predict_index.append(peak)                # add to incorrect peak list             
 
     # return correct and incorrect peak index location lists
-    return incorrect_predict_index, correct_predict_index
+    return incorrect_predict_index, correct_predict_index, correct_predict_maxima_index
 
 
 ######################################################################################
