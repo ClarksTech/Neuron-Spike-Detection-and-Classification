@@ -203,6 +203,29 @@ def cost(supply, demand):
     return dcost, f1_scores
 
 ######################################################################################
+############################# - Neighbour Direction - ################################
+def neighbour_direction( possible_filter_num, current_filter_index):
+    # decide direction of neighbour & change
+    max_up = (len(possible_filter_num)-1) - current_filter_index    # maximum neighbours above current hyperparameter position
+    max_down = 0 + current_filter_index                             # maximum neighbours below current hyperparameter position
+
+    # if no neighbours above, must go to neighbour below
+    if max_up == 0:
+        direction = 0    # change the new solution to the hyperparameter one index below (neighbour below value)
+
+    # if no neighbours below, must go to neighbour above
+    elif max_down == 0:
+        direction = 1    # change the new solution to the hyperparameter one index above (neighbour above index)
+
+    # if neighbours in both direction exist - randomly select direction
+    if max_down != 0 and max_up != 0:
+        direction = random.randint(0,1) # randomly select 0 or 1 
+
+    # return the dirction of neighbour to select
+    return direction
+
+
+######################################################################################
 ######################## - Neighbour Generation Function - ###########################
 def neighbour(solution):
     # randomly select the parameter to be change, generating a neighbour of current solution
@@ -231,7 +254,6 @@ def neighbour(solution):
         elif max_down == 0:
             new_solution[change] = possible_filter_num[current_filter_index + 1]    # change the new solution to the hyperparameter one index above (neighbour above index)
 
-
         # check new solution meets design constraints - if not change required values so it does
         filter_number = [32, 64, 128, 256, 512] # all possible filter numbers
         # if the 2nd convolution layer is now not more than 32 filters larger - fix
@@ -252,25 +274,15 @@ def neighbour(solution):
         current_filter_num = solution[change]   # current hyperparameter value
         current_filter_index = possible_filter_num.index(current_filter_num)    # current position of hyperparameter in list of possible
 
-        # decide direction of neighbour & change
-        max_up = (len(possible_filter_num)-1) - current_filter_index    # maximum neighbours above current hyperparameter position
-        max_down = 0 + current_filter_index                             # maximum neighbours below current hyperparameter position
-        # if no neighbours above, must go to neighbour below
-        if max_up == 0:
-            new_solution[change] = possible_filter_num[current_filter_index - 1]    # change the new solution to the hyperparameter one index below (neighbour below value)
-        # if no neighbours below, must go to neighbour above
-        elif max_down == 0:
-            new_solution[change] = possible_filter_num[current_filter_index + 1]    # change the new solution to the hyperparameter one index above (neighbour above index)
-        # if neighbours in both direction exist - randomly select direction
-        if max_down != 0 and max_up != 0:
-            direction = random.randint(0,1) # randomly select 0 or 1 
-            # if direction is 0 select neighbour below
-            if direction == 0:
-                new_solution[change] = possible_filter_num[current_filter_index - 1]    # change the new solution to the hyperparameter one index below (neighbour below value)
-            # otherwise if direction is 1 select neighbour above
-            else:
-                new_solution[change] = possible_filter_num[current_filter_index + 1]    # change the new solution to the hyperparameter one index above (neighbour above index)
+        # get direction of neighbour
+        direction = neighbour_direction(possible_filter_num, current_filter_index)
 
+        # get new neighbour in that direction
+        if direction == 0:
+            new_solution[change] = possible_filter_num[current_filter_index - 1]    # change the new solution to the hyperparameter one index below (neighbour below value)
+        # otherwise if direction is 1 select neighbour above
+        else:
+            new_solution[change] = possible_filter_num[current_filter_index + 1]    # change the new solution to the hyperparameter one index above (neighbour above index)
 
         # check new solution meets design constraints - if not change required values so it does
         filter_number = [32, 64, 128, 256, 512] # all possible filter numbers
@@ -292,37 +304,27 @@ def neighbour(solution):
         current_filter_num = solution[change]   # current hyperparameter value
         current_filter_index = possible_filter_num.index(current_filter_num)    # current position of hyperparameter in list of possible
 
-        # decide direction of neighbour & change
-        max_up = (len(possible_filter_num)-1) - current_filter_index    # maximum neighbours above current hyperparameter position
-        max_down = 0 + current_filter_index                             # maximum neighbours below current hyperparameter position
-        # if no neighbours above, must go to neighbour below
-        if max_up == 0:
+        # get direction of neighbour
+        direction = neighbour_direction(possible_filter_num, current_filter_index)
+
+        # get new neighbour in that direction
+        if direction == 0:
             new_solution[change] = possible_filter_num[current_filter_index - 1]    # change the new solution to the hyperparameter one index below (neighbour below value)
-        # if no neighbours below, must go to neighbour above
-        elif max_down == 0:
+        # otherwise if direction is 1 select neighbour above
+        else:
             new_solution[change] = possible_filter_num[current_filter_index + 1]    # change the new solution to the hyperparameter one index above (neighbour above index)
-        # if neighbours in both direction exist - randomly select direction
-        if max_down != 0 and max_up != 0:
-            direction = random.randint(0,1) # randomly select 0 or 1 
-            # if direction is 0 select neighbour below
-            if direction == 0:
-                new_solution[change] = possible_filter_num[current_filter_index - 1]    # change the new solution to the hyperparameter one index below (neighbour below value)
-            # otherwise if direction is 1 select neighbour above
-            else:
-                new_solution[change] = possible_filter_num[current_filter_index + 1]    # change the new solution to the hyperparameter one index above (neighbour above index)
 
-
-            # check new solution meets design constraints - if not change required values so it does
-            filter_number = [32, 64, 128, 256, 512] # all possible filter numbers
-            # if previous convolution layer is now more than 32 less than current - fix 
-            if solution[change] - solution[change - 1] < 32:
-                new_solution[change - 1] = filter_number[filter_number.index(solution[change]) - 1] # decrement convolution filter count to next index so satisfies condition
-            # if layer before previous convolution layer is now more than 32 less than current - fix 
-            if solution[change - 1] - solution[change - 2] < 32:
-                new_solution[change - 2] = filter_number[filter_number.index(solution[change -1 ]) - 1] # decrement convolution filter count to next index so satisfies condition
-            # if the 4th convolution layer is now not more than 32 filters smaller than 3rd - fix
-            if (new_solution[change] - solution[change + 1]) < 32:
-                new_solution[change + 1] = filter_number[filter_number.index(solution[change + 1]) - 1] # decrement convolution filter count to next index so satisfies condition
+        # check new solution meets design constraints - if not change required values so it does
+        filter_number = [32, 64, 128, 256, 512] # all possible filter numbers
+        # if previous convolution layer is now more than 32 less than current - fix 
+        if solution[change] - solution[change - 1] < 32:
+            new_solution[change - 1] = filter_number[filter_number.index(solution[change]) - 1] # decrement convolution filter count to next index so satisfies condition
+        # if layer before previous convolution layer is now more than 32 less than current - fix 
+        if solution[change - 1] - solution[change - 2] < 32:
+            new_solution[change - 2] = filter_number[filter_number.index(solution[change -1 ]) - 1] # decrement convolution filter count to next index so satisfies condition
+        # if the 4th convolution layer is now not more than 32 filters smaller than 3rd - fix
+        if (new_solution[change] - solution[change + 1]) < 32:
+            new_solution[change + 1] = filter_number[filter_number.index(solution[change + 1]) - 1] # decrement convolution filter count to next index so satisfies condition
 
     # if hyperparapeter 3 is being changed to neighbour state - must comply with laws of CNN model architecture
     if change == 3:
@@ -338,24 +340,15 @@ def neighbour(solution):
         current_filter_num = solution[change]                                   # current hyperparameter value
         current_filter_index = possible_filter_num.index(current_filter_num)    # current position of hyperparameter in list of possible
 
-        # decide direction of neighbour & change
-        max_up = (len(possible_filter_num)-1) - current_filter_index    # maximum neighbours above current hyperparameter position
-        max_down = 0 + current_filter_index                             # maximum neighbours below current hyperparameter position
-        # if no neighbours above, must go to neighbour below
-        if max_up == 0:
+        # get direction of neighbour
+        direction = neighbour_direction(possible_filter_num, current_filter_index)
+
+        # get new neighbour in that direction
+        if direction == 0:
             new_solution[change] = possible_filter_num[current_filter_index - 1]    # change the new solution to the hyperparameter one index below (neighbour below value)
-        # if no neighbours below, must go to neighbour above
-        elif max_down == 0:
+        # otherwise if direction is 1 select neighbour above
+        else:
             new_solution[change] = possible_filter_num[current_filter_index + 1]    # change the new solution to the hyperparameter one index above (neighbour above index)
-        # if neighbours in both direction exist - randomly select direction
-        if max_down != 0 and max_up != 0:
-            direction = random.randint(0,1) # randomly select 0 or 1 
-            # if direction is 0 select neighbour below
-            if direction == 0:
-                new_solution[change] = possible_filter_num[current_filter_index - 1]    # change the new solution to the hyperparameter one index below (neighbour below value)
-            # otherwise if direction is 1 select neighbour above
-            else:
-                new_solution[change] = possible_filter_num[current_filter_index + 1]    # change the new solution to the hyperparameter one index above (neighbour above index)
     
 
     # if hyperparapeter 4 is being changed to neighbour state - must comply with laws of CNN model architecture
@@ -365,24 +358,15 @@ def neighbour(solution):
         current_kernal_num = solution[change]   # current hyperparameter value
         current_kernal_index = possible_kernal_num.index(current_kernal_num)    # current position of hyperparameter in list of possible
 
-        # decide direction of neighbour & change
-        max_up = (len(possible_kernal_num)-1) - current_kernal_index    # maximum neighbours above current hyperparameter position
-        max_down = 0 + current_kernal_index                             # maximum neighbours below current hyperparameter position
-        # if no neighbours above, must go to neighbour below
-        if max_up == 0:
+        # get direction of neighbour
+        direction = neighbour_direction(possible_kernal_num, current_kernal_index)
+
+        # get new neighbour in that direction
+        if direction == 0:
             new_solution[change] = possible_kernal_num[current_kernal_index - 1]    # change the new solution to the hyperparameter one index below (neighbour below value)
-        # if no neighbours below, must go to neighbour above
-        elif max_down == 0:
+        # otherwise if direction is 1 select neighbour above
+        else:
             new_solution[change] = possible_kernal_num[current_kernal_index + 1]    # change the new solution to the hyperparameter one index above (neighbour above index)
-        # if neighbours in both direction exist - randomly select direction
-        if max_down != 0 and max_up != 0:
-            direction = random.randint(0,1) # randomly select 0 or 1 
-            # if direction is 0 select neighbour below
-            if direction == 0:
-                new_solution[change] = possible_kernal_num[current_kernal_index - 1]    # change the new solution to the hyperparameter one index below (neighbour below value)
-            # otherwise if direction is 1 select neighbour above
-            else:
-                new_solution[change] = possible_kernal_num[current_kernal_index + 1]    # change the new solution to the hyperparameter one index above (neighbour above index)
 
         # check new solution meets design constraints - if not change required values so it does
         if solution[change + 1] > new_solution[change]:         # check if next kernal is larger than current - fix if is
@@ -397,24 +381,15 @@ def neighbour(solution):
         current_kernal_num = solution[change]   # current hyperparameter value
         current_kernal_index = possible_kernal_num.index(current_kernal_num)    # current position of hyperparameter in list of possible
 
-        # decide direction of neighbour & change
-        max_up = (len(possible_kernal_num)-1) - current_kernal_index    # maximum neighbours above current hyperparameter position
-        max_down = 0 + current_kernal_index                             # maximum neighbours below current hyperparameter position
-        # if no neighbours above, must go to neighbour below
-        if max_up == 0:
+        # get direction of neighbour
+        direction = neighbour_direction(possible_kernal_num, current_kernal_index)
+
+        # get new neighbour in that direction
+        if direction == 0:
             new_solution[change] = possible_kernal_num[current_kernal_index - 1]    # change the new solution to the hyperparameter one index below (neighbour below value)
-        # if no neighbours below, must go to neighbour above
-        elif max_down == 0:
+        # otherwise if direction is 1 select neighbour above
+        else:
             new_solution[change] = possible_kernal_num[current_kernal_index + 1]    # change the new solution to the hyperparameter one index above (neighbour above index)
-        # if neighbours in both direction exist - randomly select direction
-        if max_down != 0 and max_up != 0:
-            direction = random.randint(0,1) # randomly select 0 or 1 
-            # if direction is 0 select neighbour below
-            if direction == 0:
-                new_solution[change] = possible_kernal_num[current_kernal_index - 1]    # change the new solution to the hyperparameter one index below (neighbour below value)
-            # otherwise if direction is 1 select neighbour above
-            else:
-                new_solution[change] = possible_kernal_num[current_kernal_index + 1]    # change the new solution to the hyperparameter one index above (neighbour above index)
 
         # check new solution meets design constraints - if not change required values so it does
         if solution[change + 1] > new_solution[change]:         # check if next kernal is larger than current - fix if is
@@ -429,24 +404,15 @@ def neighbour(solution):
         current_kernal_num = solution[change]   # current hyperparameter value
         current_kernal_index = possible_kernal_num.index(current_kernal_num)    # current position of hyperparameter in list of possible
 
-        # decide direction of neighbour & change
-        max_up = (len(possible_kernal_num)-1) - current_kernal_index    # maximum neighbours above current hyperparameter position
-        max_down = 0 + current_kernal_index                             # maximum neighbours below current hyperparameter position
-        # if no neighbours above, must go to neighbour below
-        if max_up == 0:
+        # get direction of neighbour
+        direction = neighbour_direction(possible_kernal_num, current_kernal_index)
+
+        # get new neighbour in that direction
+        if direction == 0:
             new_solution[change] = possible_kernal_num[current_kernal_index - 1]    # change the new solution to the hyperparameter one index below (neighbour below value)
-        # if no neighbours below, must go to neighbour above
-        elif max_down == 0:
+        # otherwise if direction is 1 select neighbour above
+        else:
             new_solution[change] = possible_kernal_num[current_kernal_index + 1]    # change the new solution to the hyperparameter one index above (neighbour above index)
-        # if neighbours in both direction exist - randomly select direction
-        if max_down != 0 and max_up != 0:
-            direction = random.randint(0,1) # randomly select 0 or 1 
-            # if direction is 0 select neighbour below
-            if direction == 0:
-                new_solution[change] = possible_kernal_num[current_kernal_index - 1]    # change the new solution to the hyperparameter one index below (neighbour below value)
-            # otherwise if direction is 1 select neighbour above
-            else:
-                new_solution[change] = possible_kernal_num[current_kernal_index + 1]    # change the new solution to the hyperparameter one index above (neighbour above index)
 
         # check new solution meets design constraints - if not change required values so it does
         if solution[change - 1] < new_solution[change]:             # check if previous kernal is smaller
@@ -463,18 +429,18 @@ def neighbour(solution):
 
         # determine direction of neighbour to use
         if less_than == 0:  # if no neighbours below
-            direction = 1   # set direction to above
+            new_solution[change] = (solution[change] + 0.01)    # increment hyperparameter by 0.01
         if more_than == 0:  # if no neighbours above
-            direction = 0   # set direction to below
+            new_solution[change] = (solution[change] - 0.01)    # decrement hyperparameter by 0.01
         # if neighbours above and below randomly generate direction of neighbour
         if less_than != 0 and more_than != 0:
             direction = random.randint(0,1) # randomly select 1 or 0 for direction
-        # if direction is 0 find neighbour below
-        if direction == 0:
-            new_solution[change] = (solution[change] - 0.01)    # decrement hyperparameter by 0.01
-        # otherwise find neighbour above
-        else:
-            new_solution[change] = (solution[change] + 0.01)      # increment hyperparameter by 0.01
+            # if direction is 0 find neighbour below
+            if direction == 0:
+                new_solution[change] = (solution[change] - 0.01)    # decrement hyperparameter by 0.01
+            # otherwise find neighbour above
+            elif direction == 1:
+                new_solution[change] = (solution[change] + 0.01)    # increment hyperparameter by 0.01
 
     # return the neighbouring solution
     return new_solution
@@ -497,7 +463,7 @@ print("Demand")
 print(demand)
 
 # set SA parameters
-alpha = 0.95    # decrement temperature by 5% after each complete iteration cycle
+alpha = 0.80    # decrement temperature by 5% after each complete iteration cycle
 iterations = 5  # perfore 5 itterations at each temperature
 
 # run simmulated annealing
