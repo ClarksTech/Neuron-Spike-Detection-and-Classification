@@ -128,8 +128,8 @@ def CNN_classifier(train_waveforms, train_class, test_waveforms, test_class, bat
             layers.Conv1D(64, padding="same", kernel_size=3, activation="relu"),    # second convolution layer increases number of filters to capture more features
             layers.MaxPooling1D(pool_size=2),                                       # max pooling of window size 2 used to half dimensions, keeping trainable paramaters down
             layers.Dropout(0.35),                                                   # dropout layer helps prevent overfitting by randomly dropping 0.35% of the nodes to the next layer
-            layers.Conv1D(128, padding="same", kernel_size=3, activation="relu"),   # third convolution layer further increases number of filters capturing small features
-            layers.Conv1D(64, padding="same", kernel_size=1, activation="relu"),    # kernal size of 1 is used to decrease the number of features from 128 to 64 acting as channel-wide pooling for dimensionality reduction
+            layers.Conv1D(512, padding="same", kernel_size=3, activation="relu"),   # third convolution layer further increases number of filters capturing small features
+            layers.Conv1D(256, padding="same", kernel_size=1, activation="relu"),    # kernal size of 1 is used to decrease the number of features from 128 to 64 acting as channel-wide pooling for dimensionality reduction
             layers.Flatten(),                                                       # flatten converts the multi dimension output of convolution to a single dimension array
             layers.Dense(num_classes, activation="softmax"),                        # dense converts the dimensions of the output equal to that of the number of classes, soft max uses probabalistic values to determine which class the it is most likely belonging to
         ]
@@ -213,11 +213,11 @@ if test_CNN_performance == 1:
 
 ######################################################################################
 ############################ - Call SA Optimisation - ################################
-optimise_CNN_performance = 0
+optimise_CNN_performance = 1
 if optimise_CNN_performance == 1:
     # supply SA with non-optimised hyper parameters
-    supply = [32, 64, 128, 64, 3, 3, 3, 1, 0.2, 0.35]   # CNN hyper parameters supplied to the SA for optimisation
-    demand = [1, 1, 1, 1, 1]                            # the solution demand matrix (matrix of F1-score for each classificatio class where 1 = perfect)
+    supply = [32, 64, 512, 256, 3, 3, 3, 1, 0.2, 0.35]      # CNN hyper parameters supplied to the SA for optimisation
+    demand = [1, 1, 1, 1, 1]                                # the solution demand matrix (matrix of F1-score for each classificatio class where 1 = perfect)
 
     # set SA parameters
     alpha = 0.80    # decrement temperature by 20% after each complete iteration cycle
