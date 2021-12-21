@@ -48,6 +48,55 @@ def ideal_data_preperation(data_file):
     # return the test and train waveforms and classes
     return train_waveforms, train_class, test_waveforms, test_class
 
+######################################################################################
+############## - Non-ideal Data Extraction, Proccessing, Splitting - #################
+def non_ideal_data_preperation(data_file):
+
+    # the data, split to test and train sets
+    data_stream, Index, Class, sample_rate = pd.load_training_dataset(data_file)    # load the ideal training data
+    filtered_data_stream = pd.wavelet_filter_datastream(data_stream)                # filter the waveform
+
+    # detect the peaks in the resulting datastream - store peak index and waveform in variables 0.4896, 0.42
+    peak_start_index, peak_found_waveform, peak_maxima_index = pd.convolution_peak_detection(filtered_data_stream, 0.42, 50)
+
+    # print length of known indexes
+    print("known number of peaks: ", len(Index))
+
+    # print length of found indexes
+    print("Detected number of peaks: ", len(peak_maxima_index))
+
+    # get the correct and incorrect peak index lists
+    incorrect_peak_index, correct_peak_index, correct_predict_maxima_index, correct_predict_maxima_class = pm.get_peak_detection_correct_and_incorrect_index(Index, Class, peak_maxima_index)
+
+    # get waveform windows for indexes for ideal indexes
+    correct_predicted_index_waveforms = []
+    # extract window for every known ideal index
+    for x in range(len(correct_predict_maxima_index)):
+        windowmin = correct_predict_maxima_index[x]-25                                             # 25 points before index
+        windowmax = correct_predict_maxima_index[x]+25                                             # 25 points after index
+        correct_predicted_index_waveforms.append(filtered_data_stream[windowmin:windowmax])   # add waveform window to list
+
+    # split 70/30 index and waveforms 85% train (including 15% for validation) 15% test
+    split_len = int(0.85*len(Index))                # define list split point as 85%
+    train_class = correct_predict_maxima_class[:split_len]                 # store first 85% in training class list
+    train_waveforms = correct_predicted_index_waveforms[:split_len]   # store first 85% in training waveforms list
+    test_class = correct_predict_maxima_class[split_len:]                  # store last 15% in test class list
+    test_waveforms = correct_predicted_index_waveforms[split_len:]    # store last 15% in test waveform list
+
+    # correct dimensions for keras to shape (50,1)
+    train_waveforms = np.expand_dims(train_waveforms, -1)   # add another dimension to training waveform list as keras requires 2 dimensions
+    test_waveforms = np.expand_dims(test_waveforms, -1)     # add another dimension to test waveform list as keras requires 2 dimensions
+
+    # verify correct shapes - set shape display == 1
+    shape_display = 0 
+    if shape_display == 1:
+        print("train waveform shape: ", train_waveforms.shape)  # print the shape of training waveforms to verify dimensionality
+        print(train_waveforms.shape[0], " train samples")       # print the number of training samples
+        print(test_waveforms.shape[0], " test samples")         # print the number of test samples
+
+    # return the test and train waveforms and classes
+    return train_waveforms, train_class, test_waveforms, test_class
+
 
 ######################################################################################
 ############################# - Optimisation CNN - ###################################
@@ -179,7 +228,10 @@ def anneal(solution, target, alpha, iterations):
 ################################ - Cost Function - ###################################
 def cost(supply, demand):
     # prepare the ideal data for the CNN - using known peak locations so evaluation is of classification only
-    training_waveforms, training_class, test_waveforms, test_class = ideal_data_preperation("training.mat")
+    #training_waveforms, training_class, test_waveforms, test_class = ideal_data_preperation("training.mat")
+
+    # prepare the non-ideal data for the CNN - this tests classification performance on correctly identified peak indexes at peak maxima
+    training_waveforms, training_class, test_waveforms, test_class = non_ideal_data_preperation("training.mat")
 
     # create and train the CNN, producng predicted classes for input waveforms
     test_class_predictions = CNN_classifier(training_waveforms, training_class, test_waveforms, test_class, batch_size=128, epochs=100, optimisation_params=supply)
@@ -493,7 +545,10 @@ test_CNN_performance = 0
 if test_CNN_performance == 1:
 
     # prepare the ideal data for the CNN - using known peak locations so evaluation is of classification only
-    training_waveforms, training_class, test_waveforms, test_class = ideal_data_preperation("training.mat")
+    #training_waveforms, training_class, test_waveforms, test_class = ideal_data_preperation("training.mat")
+
+    # prepare the non-ideal data for the CNN - this tests classification performance on correctly identified peak indexes at peak maxima
+    training_waveforms, training_class, test_waveforms, test_class = non_ideal_data_preperation("training.mat")
 
     # create and train the CNN, producng predicted classes for input waveforms
     test_class_predictions = CNN_classifier(training_waveforms, training_class, test_waveforms, test_class, batch_size=128, epochs=100, optimisation_params=final_solution )

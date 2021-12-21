@@ -9,7 +9,9 @@ import numpy as np
 def get_peak_detection_correct_and_incorrect_index(known_index, Class, predicted_index):
 
     # sort know indexes into ascending order
-    known_index = sorted(known_index, reverse=False)
+    #known_index = sorted(known_index, reverse=False)
+    known_index, Class = zip(*sorted(zip(known_index, Class)))
+    known_index, Class = (list(i) for i in zip(*sorted(zip(known_index, Class))))
 
     # containers for the correct and incorrect peak indexes
     correct_predict_index = []
