@@ -223,7 +223,7 @@ for i in range(5):
     optimised = [sa_precision[i], sa_recall[i], sa_f1_score[i]]
 
     # create list of metric titles for the comparison
-    metric = ["Precision", "Recall", " F1-score"]
+    metric = ["Precision", "Recall", "F1-score"]
 
     # set the number of indicies on bar graph and their width
     indices = np.arange(3)  # 5 performance metric indicies
