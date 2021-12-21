@@ -449,44 +449,47 @@ def neighbour(solution):
 ######################################################################################
 ################################ - Main code Run - ###################################
 
+# set to 1 to obtain performance metrics for peak detection
+test_SA_performance = 0
+if test_SA_performance == 1:
 
-# best sol - 32 64 128 32 7 5 3 1 0.2 0.2]
-supply = [32, 64, 128, 64, 3, 3, 3, 1, 0.2, 0.35]   # CNN hyper parameters supplied to the SA for optimisation
-demand = [1, 1, 1, 1, 1]                            # the solution demand matrix (matrix of F1-score for each classificatio class where 1 = perfect)
+    # best sol - 32 64 128 32 7 5 3 1 0.2 0.2]
+    supply = [32, 64, 128, 64, 3, 3, 3, 1, 0.2, 0.35]   # CNN hyper parameters supplied to the SA for optimisation
+    demand = [1, 1, 1, 1, 1]                            # the solution demand matrix (matrix of F1-score for each classificatio class where 1 = perfect)
 
-# print the supply hyperparameters
-print("Supply")
-print(supply)
+    # print the supply hyperparameters
+    print("Supply")
+    print(supply)
 
-# print the demanded solution
-print("Demand")
-print(demand)
+    # print the demanded solution
+    print("Demand")
+    print(demand)
 
-# set SA parameters
-alpha = 0.80    # decrement temperature by 5% after each complete iteration cycle
-iterations = 5  # perfore 5 itterations at each temperature
+    # set SA parameters
+    alpha = 0.80    # decrement temperature by 20% after each complete iteration cycle
+    iterations = 5  # perfore 5 itterations at each temperature
 
-# run simmulated annealing
-final_solution, cost, cost_values, f1_scores = anneal(supply,demand,alpha,iterations) # get a final optimised solution from simulated annealing
+    # run simmulated annealing
+    final_solution, cost, cost_values, f1_scores = anneal(supply,demand,alpha,iterations) # get a final optimised solution from simulated annealing
 
-# print the demand, final solution, its cost, and f1-scores
-print("Demand: ", demand)
-print("Final Solution: ", final_solution)
-print("Final Cost: ", cost)
-print("Final F1-Scores: ", f1_scores)
+    # print the demand, final solution, its cost, and f1-scores
+    print("Demand: ", demand)
+    print("Final Solution: ", final_solution)
+    print("Final Cost: ", cost)
+    print("Final F1-Scores: ", f1_scores)
 
-# plot the history of simulated annealing cost values for visual inspection
-plt.title("Error Function in Simmulated Annealing")
-plt.plot(cost_values)
-plt.grid(True)        
-plt.show()
+    # plot the history of simulated annealing cost values for visual inspection
+    plt.title("Error Function in Simmulated Annealing")
+    plt.plot(cost_values)
+    plt.grid(True)        
+    plt.show()
 
 
 ######################################################################################
 ########################## - Test Performance Metrics - ##############################
 
 # set to 1 to assess performance of CNN on classifying peaks from training dataset
-test_CNN_performance = 1
+test_CNN_performance = 0
 if test_CNN_performance == 1:
 
     # prepare the ideal data for the CNN - using known peak locations so evaluation is of classification only
