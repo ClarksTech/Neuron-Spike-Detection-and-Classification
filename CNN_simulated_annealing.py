@@ -8,7 +8,6 @@ from tensorflow import keras
 from tensorflow.keras import layers
 import convolutional_peak_detection as pd
 from keras.callbacks import EarlyStopping
-from matplotlib import pyplot
 import performance_metrics as pm
 
 
@@ -51,12 +50,11 @@ def ideal_data_preperation(data_file):
 
 
 ######################################################################################
-#################################### - CNN - #########################################
+############################# - Optimisation CNN - ###################################
 # batch 128 - epoch early stop 100 ~50
 def CNN_classifier(train_waveforms, train_class, test_waveforms, test_class, batch_size, epochs, optimisation_params):
 
     # optimiastion_params = [filter_size_1, filter_size_2, filter_size_3, filter_size_4, kernal_size_1, kernal_size_2, kernal_size_3, kernal_size_4, dropout_1, dropout_2]
-    # initial = [32, 64, 128, 32, 7, 5, 3, 1, 0.2, 0.2]
 
     # decrement classes to start count from 0 as data manipulation later simplified
     train_class[:] = [Class - 1 for Class in train_class]   # decrement every value in training class by 1
@@ -77,17 +75,17 @@ def CNN_classifier(train_waveforms, train_class, test_waveforms, test_class, bat
             # Define CNN model layers - all convolutions use relu activation as litrature largely regards as the best
             # padding for convolution has also been set to same - meaning when the window being convolved falls outside 
             # origional dimensions, the excess is set to the same as the last value within dimension
-            keras.Input(shape=input_shape),                                         # set the CNN input to (50,1) as defined earlier
-            layers.Conv1D(optimisation_params[0], padding="same", kernel_size=optimisation_params[4], activation="relu"),    # first layer is a convolutional layer - kernal size 7 is large with fewer fiters to capture large initial features
-            layers.MaxPooling1D(pool_size=2),                                       # max pooling of window size 2 used to half dimensions, keeping trainable paramaters down
-            layers.Dropout(optimisation_params[8]),                                                    # dropout layer helps prevent overfitting by randomly dropping 20% of the nodes to the next layer
-            layers.Conv1D(optimisation_params[1], padding="same", kernel_size=optimisation_params[5], activation="relu"),    # second convolution layer reduces the kernal size to focus on medium sized feature - as such number of filters increased
-            layers.MaxPooling1D(pool_size=2),                                       # max pooling of window size 2 used to half dimensions, keeping trainable paramaters down
-            layers.Dropout(optimisation_params[9]),                                                    # dropout layer helps prevent overfitting by randomly dropping 20% of the nodes to the next layer
-            layers.Conv1D(optimisation_params[2], padding="same", kernel_size=optimisation_params[6], activation="relu"),   # third convolution layer further reduces kernal size and increases number of filters - as such focuses on small features seperating classes
-            layers.Conv1D(optimisation_params[3], padding="same", kernel_size=optimisation_params[7], activation="relu"),    # kernal size of 1 is used to decrease the number of features from 128 to 32 acting as channel-wide pooling for dimensionality reduction
-            layers.Flatten(),                                                       # flatten converts the multi dimension output of convolution to a single dimension array
-            layers.Dense(num_classes, activation="softmax"),                        # dense converts the dimensions of the output equal to that of the number of classes, soft max uses probabalistic values to determine which class the it is most likely belonging to
+            keras.Input(shape=input_shape),                                                                                     # set the CNN input to (50,1) as defined earlier
+            layers.Conv1D(optimisation_params[0], padding="same", kernel_size=optimisation_params[4], activation="relu"),       # first layer is a convolutional layer - kernal size is large with fewer fiters to capture large initial features
+            layers.MaxPooling1D(pool_size=2),                                                                                   # max pooling of window size 2 used to half dimensions, keeping trainable paramaters down
+            layers.Dropout(optimisation_params[8]),                                                                             # dropout layer helps prevent overfitting by randomly dropping 20% of the nodes to the next layer
+            layers.Conv1D(optimisation_params[1], padding="same", kernel_size=optimisation_params[5], activation="relu"),       # second convolution layer reduces the kernal size to focus on medium sized feature - as such number of filters increased
+            layers.MaxPooling1D(pool_size=2),                                                                                   # max pooling of window size 2 used to half dimensions, keeping trainable paramaters down
+            layers.Dropout(optimisation_params[9]),                                                                             # dropout layer helps prevent overfitting by randomly dropping nodes to the next layer
+            layers.Conv1D(optimisation_params[2], padding="same", kernel_size=optimisation_params[6], activation="relu"),       # third convolution layer further reduces kernal size and increases number of filters - as such focuses on small features seperating classes
+            layers.Conv1D(optimisation_params[3], padding="same", kernel_size=optimisation_params[7], activation="relu"),       # kernal size of 1 is fixed to decrease the number of features acting as channel-wide pooling for dimensionality reduction
+            layers.Flatten(),                                                                                                   # flatten converts the multi dimension output of convolution to a single dimension array
+            layers.Dense(num_classes, activation="softmax"),                                                                    # dense converts the dimensions of the output equal to that of the number of classes, soft max uses probabalistic values to determine which class the it is most likely belonging to
         ]
     )
 
@@ -106,19 +104,13 @@ def CNN_classifier(train_waveforms, train_class, test_waveforms, test_class, bat
     # train the model - validation split set to 0.177 as this is 15% of whole dataset - callbacks enabled for early stopping preventing overfitting
     history = model.fit(train_waveforms, train_class, batch_size=batch_size, epochs=epochs, validation_split=0.177, callbacks=[es])
 
-    # plot training history and loss to observe if overfitting occured (lines will begine to diverge as ovrfitting occurs)
-    #pyplot.plot(history.history['loss'], label='train')     # plot training loss
-    #pyplot.plot(history.history['val_loss'], label='test')  # plot validation loss
-    #pyplot.legend()
-    #pyplot.show()
-
     # evaluate the model - display results
     score = model.evaluate(test_waveforms, test_class, batch_size =1)   # evaluate the model on test data to obtain final performance marks on new data
     print("Test loss:", score[0])           # print the test loss
     print("Test accuracy:", score[1])       # print the test accuracy
 
     # save the models weights for use later
-    model.save_weights('Training_data_CNN.h5')
+    model.save_weights('Optimised_Training_data_CNN.h5')
 
     # make predictions for test set
     test_class_predictions = model.predict(test_waveforms)              # create predictions for class of each test waveform
@@ -133,17 +125,409 @@ def CNN_classifier(train_waveforms, train_class, test_waveforms, test_class, bat
     return test_class_predictions
 
 ######################################################################################
+############################# - Simulated Annealing - ################################
+
+######################################################################################
+#################### - Acceptance probability of new solution - ######################
+def acceptance_probability(old_cost, new_cost, T):
+    a = math.exp((old_cost-new_cost)/T)             # function of the difference between last cost and new cost with temperature - higher temperature accepts more leniently
+    return a
+
+######################################################################################
+############################### - Annealing Loop - ###################################
+def anneal(solution, target, alpha, iterations):
+    old_cost, f1_scores = cost(solution, target)    # calculate cost of surrent solution
+    cost_values = list()                            # container to store previous costs
+    cost_values.append(old_cost)                    # add current solution cost to container
+    T = 1.0             # temperature set to 1 to start (high)                           
+    T_min = 0.000001    # minimum temperature to aneal to if no solution found
+    break_flag = 0      # break flag set to 0 used to break out of anneal when solution found
+
+    # loop through simulated anneal whilst temperature above the minimum
+    while T > T_min:    
+        i = 1           # initialise iteration counter
+
+        # loop through all iterations at the temperature
+        while i <= iterations:
+            print("Iteration : " + str(i) + " cost : " + str(old_cost))     # print the iteration number and cost for visual progress checking
+            print(solution)                                                 # print the solution being used for visual inspection of neighbour production
+            new_solution = neighbour(solution)             # produce new neighbour solution
+            new_cost, f1_scores = cost(new_solution, target)    # generate the new cost of the new neighbour
+            ap = acceptance_probability(old_cost, new_cost, T)  # depending on the new cost and temperature calculate accpetance probability
+
+            # if acceptance probablitity greater than a random number - accept the new solution
+            if ap > random.random():
+                solution = new_solution     # set current solution as new solution
+                old_cost = new_cost         # set the old cost as the new cost
+
+            i += 1                          # increase the iteration counter
+            cost_values.append(old_cost)    # store the old cost in history container
+
+            # check if the new accepted solution meets termination criteria
+            if new_cost < 0.025:    # termination criteria set to cost less than 0.025
+                break_flag = 1      # if meets set the break flag
+                break               # break out of current temperature loop
+        if break_flag == 1:
+            break                   # break out of anneal loop
+
+        T = T*alpha     # decrement the temperature by alpha
+
+    # return the solution, thye solutions cost, history of costs, and the solutions F1-scores
+    return solution, old_cost, cost_values, f1_scores
+
+######################################################################################
+################################ - Cost Function - ###################################
+def cost(supply, demand):
+    # prepare the ideal data for the CNN - using known peak locations so evaluation is of classification only
+    training_waveforms, training_class, test_waveforms, test_class = ideal_data_preperation("training.mat")
+
+    # create and train the CNN, producng predicted classes for input waveforms
+    test_class_predictions = CNN_classifier(training_waveforms, training_class, test_waveforms, test_class, batch_size=128, epochs=100, optimisation_params=supply)
+
+    # get true positive, true negative, false positive, and false negative classifications for each class
+    tp, tn, fp, fn = pm.get_confusion_matrix_params(test_class, test_class_predictions, 5)
+
+    # get the F1-scores for each class
+    f1_scores = []          # container to store f1-scores of each class
+    for i in range(5):      # for each class
+        precision, recall, F1_score = pm.gen_performance_metrics(tp[i], tn[i], fp[i], fn[i])   # get f1-score
+        f1_scores.append(F1_score)          # store all f1-scores in list
+        
+    # cost is the RMS error between the demanded F1-scores and the current solution generated F1-scores
+    delta = np.subtract(demand, f1_scores)  # get difference between demand and solution f1-score by subtraction
+    delta2 = np.square(delta)               # square the differences to negate negatives
+    ave = np.average(delta2)                # get the average of all such that a single value is obtained for cost
+    dcost = math.sqrt(ave)                  # square root to obrain RMS error
+
+    # return the RMS error cost and the F1-scores for all classes
+    return dcost, f1_scores
+
+######################################################################################
+######################## - Neighbour Generation Function - ###########################
+def neighbour(solution):
+    # randomly select the parameter to be change, generating a neighbour of current solution
+    change = 7
+    # positions 7 and 8 in the CNN hyper parameters are constant so do not accept their positions
+    while change == 7 or change == 8:   # while the position selected is invalid
+        change = random.randint(0,9)    # select a new random position
+    print("change = ", change)          # print selected hyperparameter to be changed for visual confirmation
+    new_solution = solution             # coppy current solution to new solution container for manipulation into neighbour
+    
+    # if hyperparapeter 0 is being changed to neighbour state - must comply with laws of CNN model architecture
+    if change == 0:
+
+        # current hyperparapeter value
+        possible_filter_num = [32, 64]          # possible values for hyperparameter 0 to obey architecture laws
+        current_filter_num = solution[change]   # current hyperparameter value
+        current_filter_index = possible_filter_num.index(current_filter_num)    # current position of hyperparameter in list of possible
+
+        # decide direction of neighbour & change
+        max_up = (len(possible_filter_num)-1) - current_filter_index    # maximum neighbours above current hyperparameter position
+        max_down = 0 + current_filter_index                             # maximum neighbours below current hyperparameter position
+        # if no neighbours above, must go to neighbour below
+        if max_up == 0:
+            new_solution[change] = possible_filter_num[current_filter_index - 1]    # change the new solution to the hyperparameter one index below (neighbour below value)
+        # if no neighbours below, must go to neighbour above
+        elif max_down == 0:
+            new_solution[change] = possible_filter_num[current_filter_index + 1]    # change the new solution to the hyperparameter one index above (neighbour above index)
+
+
+        # check new solution meets design constraints - if not change required values so it does
+        filter_number = [32, 64, 128, 256, 512] # all possible filter numbers
+        # if the 2nd convolution layer is now not more than 32 filters larger - fix
+        if (solution[change + 1] - new_solution[change]) < 32:
+            new_solution[change + 1] = filter_number[filter_number.index(solution[change + 1]) + 1] # increment convolution filter count to next index so satisfies condition
+        # if the 3rd convolution layer is now not more than 32 filters larger than 2nd - fix
+        if (solution[change + 2] - new_solution[change + 1]) < 32:
+            new_solution[change + 2] = filter_number[filter_number.index(solution[change + 2]) + 1] # increment convolution filter count to next index so satisfies condition
+        # if the 4th convolution layer is now not more than 32 filters smaller than 3rd - fix
+        if (new_solution[change + 2] - solution[change + 3]) < 32:
+            new_solution[change + 3] = filter_number[filter_number.index(solution[change + 3]) - 1] # decrement convolution filter count to next index so satisfies condition
+
+    # if hyperparapeter 1 is being changed to neighbour state - must comply with laws of CNN model architecture
+    if change == 1:
+
+        # current hyperparapeter value
+        possible_filter_num = [64, 128, 256]    # possible values for hyperparameter 1 to obey architecture laws
+        current_filter_num = solution[change]   # current hyperparameter value
+        current_filter_index = possible_filter_num.index(current_filter_num)    # current position of hyperparameter in list of possible
+
+        # decide direction of neighbour & change
+        max_up = (len(possible_filter_num)-1) - current_filter_index    # maximum neighbours above current hyperparameter position
+        max_down = 0 + current_filter_index                             # maximum neighbours below current hyperparameter position
+        # if no neighbours above, must go to neighbour below
+        if max_up == 0:
+            new_solution[change] = possible_filter_num[current_filter_index - 1]    # change the new solution to the hyperparameter one index below (neighbour below value)
+        # if no neighbours below, must go to neighbour above
+        elif max_down == 0:
+            new_solution[change] = possible_filter_num[current_filter_index + 1]    # change the new solution to the hyperparameter one index above (neighbour above index)
+        # if neighbours in both direction exist - randomly select direction
+        if max_down != 0 and max_up != 0:
+            direction = random.randint(0,1) # randomly select 0 or 1 
+            # if direction is 0 select neighbour below
+            if direction == 0:
+                new_solution[change] = possible_filter_num[current_filter_index - 1]    # change the new solution to the hyperparameter one index below (neighbour below value)
+            # otherwise if direction is 1 select neighbour above
+            else:
+                new_solution[change] = possible_filter_num[current_filter_index + 1]    # change the new solution to the hyperparameter one index above (neighbour above index)
+
+
+        # check new solution meets design constraints - if not change required values so it does
+        filter_number = [32, 64, 128, 256, 512] # all possible filter numbers
+        # if 1st convolution layer is now more than 32 less than current - fix 
+        if solution[change] - solution[change - 1] < 32:
+            new_solution[change - 1] = filter_number[filter_number.index(solution[change]) - 1] # decrement convolution filter count to next index so satisfies condition
+        # if the 3rd convolution layer is now not more than 32 filters larger than 2nd - fix
+        if (solution[change + 1] - new_solution[change]) < 32:
+            new_solution[change + 1] = filter_number[filter_number.index(solution[change + 1]) + 1] # increment convolution filter count to next index so satisfies condition
+        # if the 4th convolution layer is now not more than 32 filters smaller than 3rd - fix
+        if (new_solution[change + 1] - solution[change + 2]) < 32:
+            new_solution[change + 2] = filter_number[filter_number.index(solution[change + 2]) - 1] # decrement convolution filter count to next index so satisfies condition
+
+    # if hyperparapeter 2 is being changed to neighbour state - must comply with laws of CNN model architecture
+    if change == 2:
+
+        # current hyperparapeter value
+        possible_filter_num = [128, 256, 512]   # possible values for hyperparameter 2 to obey architecture laws
+        current_filter_num = solution[change]   # current hyperparameter value
+        current_filter_index = possible_filter_num.index(current_filter_num)    # current position of hyperparameter in list of possible
+
+        # decide direction of neighbour & change
+        max_up = (len(possible_filter_num)-1) - current_filter_index    # maximum neighbours above current hyperparameter position
+        max_down = 0 + current_filter_index                             # maximum neighbours below current hyperparameter position
+        # if no neighbours above, must go to neighbour below
+        if max_up == 0:
+            new_solution[change] = possible_filter_num[current_filter_index - 1]    # change the new solution to the hyperparameter one index below (neighbour below value)
+        # if no neighbours below, must go to neighbour above
+        elif max_down == 0:
+            new_solution[change] = possible_filter_num[current_filter_index + 1]    # change the new solution to the hyperparameter one index above (neighbour above index)
+        # if neighbours in both direction exist - randomly select direction
+        if max_down != 0 and max_up != 0:
+            direction = random.randint(0,1) # randomly select 0 or 1 
+            # if direction is 0 select neighbour below
+            if direction == 0:
+                new_solution[change] = possible_filter_num[current_filter_index - 1]    # change the new solution to the hyperparameter one index below (neighbour below value)
+            # otherwise if direction is 1 select neighbour above
+            else:
+                new_solution[change] = possible_filter_num[current_filter_index + 1]    # change the new solution to the hyperparameter one index above (neighbour above index)
+
+
+            # check new solution meets design constraints - if not change required values so it does
+            filter_number = [32, 64, 128, 256, 512] # all possible filter numbers
+            # if previous convolution layer is now more than 32 less than current - fix 
+            if solution[change] - solution[change - 1] < 32:
+                new_solution[change - 1] = filter_number[filter_number.index(solution[change]) - 1] # decrement convolution filter count to next index so satisfies condition
+            # if layer before previous convolution layer is now more than 32 less than current - fix 
+            if solution[change - 1] - solution[change - 2] < 32:
+                new_solution[change - 2] = filter_number[filter_number.index(solution[change -1 ]) - 1] # decrement convolution filter count to next index so satisfies condition
+            # if the 4th convolution layer is now not more than 32 filters smaller than 3rd - fix
+            if (new_solution[change] - solution[change + 1]) < 32:
+                new_solution[change + 1] = filter_number[filter_number.index(solution[change + 1]) - 1] # decrement convolution filter count to next index so satisfies condition
+
+    # if hyperparapeter 3 is being changed to neighbour state - must comply with laws of CNN model architecture
+    if change == 3:
+
+        # possible values for hyperparameter 3 to obey architecture laws as must be at least 32 filters less than previous convolution
+        if solution[change - 1] == 512:
+            possible_filter_num = [32, 64, 128, 256]    # possible values when previous conv has 512 (maximum for that layer)
+        elif solution[change-1] == 256:
+            possible_filter_num = [32, 64, 128]         # possible values when previous conv has 256
+        else:
+            possible_filter_num = [32, 64]              # possible values when previous conv has 128 (minimum for that layer)
+        
+        current_filter_num = solution[change]                                   # current hyperparameter value
+        current_filter_index = possible_filter_num.index(current_filter_num)    # current position of hyperparameter in list of possible
+
+        # decide direction of neighbour & change
+        max_up = (len(possible_filter_num)-1) - current_filter_index    # maximum neighbours above current hyperparameter position
+        max_down = 0 + current_filter_index                             # maximum neighbours below current hyperparameter position
+        # if no neighbours above, must go to neighbour below
+        if max_up == 0:
+            new_solution[change] = possible_filter_num[current_filter_index - 1]    # change the new solution to the hyperparameter one index below (neighbour below value)
+        # if no neighbours below, must go to neighbour above
+        elif max_down == 0:
+            new_solution[change] = possible_filter_num[current_filter_index + 1]    # change the new solution to the hyperparameter one index above (neighbour above index)
+        # if neighbours in both direction exist - randomly select direction
+        if max_down != 0 and max_up != 0:
+            direction = random.randint(0,1) # randomly select 0 or 1 
+            # if direction is 0 select neighbour below
+            if direction == 0:
+                new_solution[change] = possible_filter_num[current_filter_index - 1]    # change the new solution to the hyperparameter one index below (neighbour below value)
+            # otherwise if direction is 1 select neighbour above
+            else:
+                new_solution[change] = possible_filter_num[current_filter_index + 1]    # change the new solution to the hyperparameter one index above (neighbour above index)
+    
+
+    # if hyperparapeter 4 is being changed to neighbour state - must comply with laws of CNN model architecture
+    if change == 4:
+        # current hyperparapeter value
+        possible_kernal_num = [3, 5, 7]         # possible values for hyperparameter 4 to obey architecture laws
+        current_kernal_num = solution[change]   # current hyperparameter value
+        current_kernal_index = possible_kernal_num.index(current_kernal_num)    # current position of hyperparameter in list of possible
+
+        # decide direction of neighbour & change
+        max_up = (len(possible_kernal_num)-1) - current_kernal_index    # maximum neighbours above current hyperparameter position
+        max_down = 0 + current_kernal_index                             # maximum neighbours below current hyperparameter position
+        # if no neighbours above, must go to neighbour below
+        if max_up == 0:
+            new_solution[change] = possible_kernal_num[current_kernal_index - 1]    # change the new solution to the hyperparameter one index below (neighbour below value)
+        # if no neighbours below, must go to neighbour above
+        elif max_down == 0:
+            new_solution[change] = possible_kernal_num[current_kernal_index + 1]    # change the new solution to the hyperparameter one index above (neighbour above index)
+        # if neighbours in both direction exist - randomly select direction
+        if max_down != 0 and max_up != 0:
+            direction = random.randint(0,1) # randomly select 0 or 1 
+            # if direction is 0 select neighbour below
+            if direction == 0:
+                new_solution[change] = possible_kernal_num[current_kernal_index - 1]    # change the new solution to the hyperparameter one index below (neighbour below value)
+            # otherwise if direction is 1 select neighbour above
+            else:
+                new_solution[change] = possible_kernal_num[current_kernal_index + 1]    # change the new solution to the hyperparameter one index above (neighbour above index)
+
+        # check new solution meets design constraints - if not change required values so it does
+        if solution[change + 1] > new_solution[change]:         # check if next kernal is larger than current - fix if is
+            new_solution[change + 1] = new_solution[change]     # set next kernal to same size as current
+        if solution[change + 2] > new_solution[change + 1]:     # check if last kernal is larger than second kernal
+            new_solution[change + 2] = new_solution[change + 1] # set last kernal equal to second if it is
+
+    # if hyperparapeter 5 is being changed to neighbour state - must comply with laws of CNN model architecture
+    if change == 5:
+        # current hyperparapeter value
+        possible_kernal_num = [3, 5, 7]         # possible values for hyperparameter 5 to obey architecture laws
+        current_kernal_num = solution[change]   # current hyperparameter value
+        current_kernal_index = possible_kernal_num.index(current_kernal_num)    # current position of hyperparameter in list of possible
+
+        # decide direction of neighbour & change
+        max_up = (len(possible_kernal_num)-1) - current_kernal_index    # maximum neighbours above current hyperparameter position
+        max_down = 0 + current_kernal_index                             # maximum neighbours below current hyperparameter position
+        # if no neighbours above, must go to neighbour below
+        if max_up == 0:
+            new_solution[change] = possible_kernal_num[current_kernal_index - 1]    # change the new solution to the hyperparameter one index below (neighbour below value)
+        # if no neighbours below, must go to neighbour above
+        elif max_down == 0:
+            new_solution[change] = possible_kernal_num[current_kernal_index + 1]    # change the new solution to the hyperparameter one index above (neighbour above index)
+        # if neighbours in both direction exist - randomly select direction
+        if max_down != 0 and max_up != 0:
+            direction = random.randint(0,1) # randomly select 0 or 1 
+            # if direction is 0 select neighbour below
+            if direction == 0:
+                new_solution[change] = possible_kernal_num[current_kernal_index - 1]    # change the new solution to the hyperparameter one index below (neighbour below value)
+            # otherwise if direction is 1 select neighbour above
+            else:
+                new_solution[change] = possible_kernal_num[current_kernal_index + 1]    # change the new solution to the hyperparameter one index above (neighbour above index)
+
+        # check new solution meets design constraints - if not change required values so it does
+        if solution[change + 1] > new_solution[change]:         # check if next kernal is larger than current - fix if is
+            new_solution[change + 1] = new_solution[change]     # set next kernal to same size as current
+        if solution[change - 1] < new_solution[change]:         # check if previous kernal is smaller than current kernal
+            new_solution[change - 1] = new_solution[change]     # set last kernal equal to second if it is
+
+    # if hyperparapeter 6 is being changed to neighbour state - must comply with laws of CNN model architecture
+    if change == 6:
+        # current hyperparapeter value
+        possible_kernal_num = [3, 5, 7]         # possible values for hyperparameter 6 to obey architecture laws
+        current_kernal_num = solution[change]   # current hyperparameter value
+        current_kernal_index = possible_kernal_num.index(current_kernal_num)    # current position of hyperparameter in list of possible
+
+        # decide direction of neighbour & change
+        max_up = (len(possible_kernal_num)-1) - current_kernal_index    # maximum neighbours above current hyperparameter position
+        max_down = 0 + current_kernal_index                             # maximum neighbours below current hyperparameter position
+        # if no neighbours above, must go to neighbour below
+        if max_up == 0:
+            new_solution[change] = possible_kernal_num[current_kernal_index - 1]    # change the new solution to the hyperparameter one index below (neighbour below value)
+        # if no neighbours below, must go to neighbour above
+        elif max_down == 0:
+            new_solution[change] = possible_kernal_num[current_kernal_index + 1]    # change the new solution to the hyperparameter one index above (neighbour above index)
+        # if neighbours in both direction exist - randomly select direction
+        if max_down != 0 and max_up != 0:
+            direction = random.randint(0,1) # randomly select 0 or 1 
+            # if direction is 0 select neighbour below
+            if direction == 0:
+                new_solution[change] = possible_kernal_num[current_kernal_index - 1]    # change the new solution to the hyperparameter one index below (neighbour below value)
+            # otherwise if direction is 1 select neighbour above
+            else:
+                new_solution[change] = possible_kernal_num[current_kernal_index + 1]    # change the new solution to the hyperparameter one index above (neighbour above index)
+
+        # check new solution meets design constraints - if not change required values so it does
+        if solution[change - 1] < new_solution[change]:             # check if previous kernal is smaller
+            new_solution[change - 1] = new_solution[change]         # if so set to same size
+        if solution[change - 2] < new_solution[change - 1]:         # check if first kernal is smaller than previous
+            new_solution[change - 2] = new_solution[change - 1]     # if so set to same size
+
+
+    # if hyperparapeter 9 is being changed to neighbour state - must comply with laws of CNN model architecture
+    if change == 9:
+
+        less_than = solution[change] - 0.2  # maximum neighbours below current hyperparameter position
+        more_than = 0.5 - solution[change]  # maximum neighbours above current hyperparameter position
+
+        # determine direction of neighbour to use
+        if less_than == 0:  # if no neighbours below
+            direction = 1   # set direction to above
+        if more_than == 0:  # if no neighbours above
+            direction = 0   # set direction to below
+        # if neighbours above and below randomly generate direction of neighbour
+        if less_than != 0 and more_than != 0:
+            direction = random.randint(0,1) # randomly select 1 or 0 for direction
+        # if direction is 0 find neighbour below
+        if direction == 0:
+            new_solution[change] = (solution[change] - 0.01)    # decrement hyperparameter by 0.01
+        # otherwise find neighbour above
+        else:
+            new_solution[change] = (solution[change] + 0.01)      # increment hyperparameter by 0.01
+
+    # return the neighbouring solution
+    return new_solution
+
+
+######################################################################################
+################################ - Main code Run - ###################################
+
+
+# best sol - 32 64 128 32 7 5 3 1 0.2 0.2]
+supply = [32, 64, 128, 64, 3, 3, 3, 1, 0.2, 0.35]   # CNN hyper parameters supplied to the SA for optimisation
+demand = [1, 1, 1, 1, 1]                            # the solution demand matrix (matrix of F1-score for each classificatio class where 1 = perfect)
+
+# print the supply hyperparameters
+print("Supply")
+print(supply)
+
+# print the demanded solution
+print("Demand")
+print(demand)
+
+# set SA parameters
+alpha = 0.95    # decrement temperature by 5% after each complete iteration cycle
+iterations = 5  # perfore 5 itterations at each temperature
+
+# run simmulated annealing
+final_solution, cost, cost_values, f1_scores = anneal(supply,demand,alpha,iterations) # get a final optimised solution from simulated annealing
+
+# print the demand, final solution, its cost, and f1-scores
+print("Demand: ", demand)
+print("Final Solution: ", final_solution)
+print("Final Cost: ", cost)
+print("Final F1-Scores: ", f1_scores)
+
+# plot the history of simulated annealing cost values for visual inspection
+plt.title("Error Function in Simmulated Annealing")
+plt.plot(cost_values)
+plt.grid(True)        
+plt.show()
+
+
+######################################################################################
 ########################## - Test Performance Metrics - ##############################
 
 # set to 1 to assess performance of CNN on classifying peaks from training dataset
-test_CNN_performance = 0
+test_CNN_performance = 1
 if test_CNN_performance == 1:
 
     # prepare the ideal data for the CNN - using known peak locations so evaluation is of classification only
     training_waveforms, training_class, test_waveforms, test_class = ideal_data_preperation("training.mat")
 
     # create and train the CNN, producng predicted classes for input waveforms
-    test_class_predictions = CNN_classifier(training_waveforms, training_class, test_waveforms, test_class, batch_size=128, epochs=100, optimisation_params=[32, 64, 128, 32, 7, 5, 3, 1, 0.2, 0.2])
+    test_class_predictions = CNN_classifier(training_waveforms, training_class, test_waveforms, test_class, batch_size=128, epochs=100, optimisation_params=final_solution )
 
     # get true positive, true negative, false positive, and false negative classifications for each class
     tp, tn, fp, fn = pm.get_confusion_matrix_params(test_class, test_class_predictions, 5)
@@ -157,345 +541,3 @@ if test_CNN_performance == 1:
         class_number = i+1      # class number + 1 as count starts at 0 but class index starts at 1
         precision, recall, F1_score = pm.gen_performance_metrics(tp[i], tn[i], fp[i], fn[i])                                        # generate the performance metrics
         print("Class ", class_number, " Perfromance Metrics: Precision=", precision, " Recall=", recall, " F1-score=", F1_score)    # print performance etrics for class
-
-
-
-#acceptance probability function
-def acceptance_probability(old_cost, new_cost, T):
-    a = math.exp((old_cost-new_cost)/T)
-    return a
-
-#annealing function
-def anneal(solution, target, alpha, iterations, var):
-    old_cost = cost(solution, target)
-    cost_values = list()
-    cost_values.append(old_cost)
-    T = 1.0
-    T_min = 0.000001
-    break_flag = 0
-    while T > T_min:
-        i = 1
-        while i <= iterations:
-            print("Iteration : " + str(i) + " cost : " + str(old_cost))
-            print(solution)
-            new_solution = neighbour(solution, var)
-            new_cost = cost(new_solution, target)
-            ap = acceptance_probability(old_cost, new_cost, T)
-            if ap > random.random():
-                solution = new_solution
-                old_cost = new_cost
-            i += 1
-            cost_values.append(old_cost)
-            if new_cost < 0.025:
-                break_flag = 1
-                break
-        if break_flag == 1:
-            break
-        T = T*alpha
-    return solution, old_cost, cost_values
-
-#cost function
-def cost(supply, demand):
-    # prepare the ideal data for the CNN - using known peak locations so evaluation is of classification only
-    training_waveforms, training_class, test_waveforms, test_class = ideal_data_preperation("training.mat")
-
-    # create and train the CNN, producng predicted classes for input waveforms
-    test_class_predictions = CNN_classifier(training_waveforms, training_class, test_waveforms, test_class, batch_size=128, epochs=100, optimisation_params=supply)
-
-    # get true positive, true negative, false positive, and false negative classifications for each class
-    tp, tn, fp, fn = pm.get_confusion_matrix_params(test_class, test_class_predictions, 5)
-
-    # Print the performance metrics Precision, Recall, and F1-Score for each class (closer to 1 is better)
-    f1_scores = []
-    for i in range(5):                      # for each class
-        precision, recall, F1_score = pm.gen_performance_metrics(tp[i], tn[i], fp[i], fn[i])   
-        f1_scores.append(F1_score)          # generate the performance metrics
-        
-    delta = np.subtract(demand, f1_scores)
-    delta2 = np.square(delta)
-    ave = np.average(delta2)
-    dcost = math.sqrt(ave)
-
-    return dcost
-
-#neighbour function
-def neighbour(solution, d):
-    # select param to be altered
-    change = 7
-
-    while change == 7 or change == 8:
-        change = random.randint(0,9)
-
-    print("change = ", change)
-    new_solution = solution
-    
-# number of filters selection
-    if change == 0:
-
-        # current in possible range
-        possible_filter_num = [32, 64]
-        current_filter_num = solution[change]
-        current_filter_index = possible_filter_num.index(current_filter_num)
-
-        # decide direction of neighbour & change
-        max_up = (len(possible_filter_num)-1) - current_filter_index
-        max_down = 0 + current_filter_index
-        if max_up == 0:
-            new_solution[change] = possible_filter_num[current_filter_index - 1]
-        elif max_down == 0:
-            new_solution[change] = possible_filter_num[current_filter_index + 1]
-
-
-        # check new solution meets design constraints - if not change required values so it does
-        filter_number = [32, 64, 128, 256, 512]
-        if (solution[change + 1] - new_solution[change]) < 32:
-            new_solution[change + 1] = filter_number[filter_number.index(solution[change + 1]) + 1]
-        if (solution[change + 2] - new_solution[change + 1]) < 32:
-            new_solution[change + 2] = filter_number[filter_number.index(solution[change + 2]) + 1]
-        if (new_solution[change + 2] - solution[change + 3]) < 32:
-            new_solution[change + 3] = filter_number[filter_number.index(solution[change + 3]) - 1]
-
-    if change == 1:
-
-        # current in possible range
-        
-        possible_filter_num = [64, 128, 256]
-        
-        current_filter_num = solution[change]
-        current_filter_index = possible_filter_num.index(current_filter_num)
-
-        # decide direction of neighbour & change
-        max_up = (len(possible_filter_num)-1) - current_filter_index
-        max_down = 0 + current_filter_index
-        if max_up == 0:
-            new_solution[change] = possible_filter_num[current_filter_index - 1]
-        elif max_down == 0:
-            new_solution[change] = possible_filter_num[current_filter_index + 1]
-
-        if max_down != 0 and max_up != 0:
-            direction = random.randint(0,1)
-            if direction == 0:
-                new_solution[change] = possible_filter_num[current_filter_index - 1]
-            else:
-                new_solution[change] = possible_filter_num[current_filter_index + 1]
-
-
-        # check new solution meets design constraints - if not change required values so it does
-        filter_number = [32, 64, 128, 256, 512]
-        if solution[change] - solution[change - 1] < 32:
-            new_solution[change - 1] = filter_number[filter_number.index(solution[change]) - 1]
-        if (solution[change + 1] - new_solution[change]) < 32:
-            new_solution[change + 1] = filter_number[filter_number.index(solution[change + 1]) + 1]
-        if (new_solution[change + 1] - solution[change + 2]) < 32:
-            new_solution[change + 2] = filter_number[filter_number.index(solution[change + 2]) - 1]
-
-    if change == 2:
-
-        # current in possible range
-        possible_filter_num = [128, 256, 512]
-
-        current_filter_num = solution[change]
-        current_filter_index = possible_filter_num.index(current_filter_num)
-
-        # decide direction of neighbour & change
-        if len(possible_filter_num) != 1:
-        
-            max_up = (len(possible_filter_num)-1) - current_filter_index
-            max_down = 0 + current_filter_index
-            if max_up == 0:
-                new_solution[change] = possible_filter_num[current_filter_index - 1]
-            elif max_down == 0:
-                new_solution[change] = possible_filter_num[current_filter_index + 1]
-
-            if max_down != 0 and max_up != 0:
-                direction = random.randint(0,1)
-                if direction == 0:
-                    new_solution[change] = possible_filter_num[current_filter_index - 1]
-                else:
-                    new_solution[change] = possible_filter_num[current_filter_index + 1]
-
-
-            # check new solution meets design constraints - if not change required values so it does
-            filter_number = [32, 64, 128, 256, 512]
-            if solution[change] - solution[change - 1] < 32:
-                new_solution[change - 1] = filter_number[filter_number.index(solution[change]) - 1]
-            if solution[change - 1] - solution[change - 2] < 32:
-                new_solution[change - 2] = filter_number[filter_number.index(solution[change -1 ]) - 1]
-            if (new_solution[change] - solution[change + 1]) < 32:
-                new_solution[change + 1] = filter_number[filter_number.index(solution[change + 1]) - 1]
-
-    if change == 3:
-
-        # current in possible range
-        if solution[change - 1] == 512:
-            possible_filter_num = [32, 64, 128, 256]
-        elif solution[change-1] == 256:
-            possible_filter_num = [32, 64, 128]
-        else:
-            possible_filter_num = [32, 64]
-        
-        current_filter_num = solution[change]
-        current_filter_index = possible_filter_num.index(current_filter_num)
-
-        # decide direction of neighbour & change
-
-        max_up = (len(possible_filter_num)-1) - current_filter_index
-        max_down = 0 + current_filter_index
-        if max_up == 0:
-            new_solution[change] = possible_filter_num[current_filter_index - 1]
-        elif max_down == 0:
-            new_solution[change] = possible_filter_num[current_filter_index + 1]
-
-        if max_down != 0 and max_up != 0:
-            direction = random.randint(0,1)
-            if direction == 0:
-                new_solution[change] = possible_filter_num[current_filter_index - 1]
-            else:
-                new_solution[change] = possible_filter_num[current_filter_index + 1]
-    
-
-    # kernal size selection
-    if change == 4:
-
-
-        possible_kernal_num = [3, 5, 7]
-        current_kernal_num = solution[change]
-        current_kernal_index = possible_kernal_num.index(current_kernal_num)
-
-        # decide direction of neighbour & change
-        max_up = (len(possible_kernal_num)-1) - current_kernal_index
-        max_down = 0 + current_kernal_index
-        if max_up == 0:
-            new_solution[change] = possible_kernal_num[current_kernal_index - 1]
-        elif max_down == 0:
-            new_solution[change] = possible_kernal_num[current_kernal_index + 1]
-
-        if max_down != 0 and max_up != 0:
-            direction = random.randint(0,1)
-            if direction == 0:
-                new_solution[change] = possible_kernal_num[current_kernal_index - 1]
-            else:
-                new_solution[change] = possible_kernal_num[current_kernal_index + 1]
-
-        # check new solution meets design constraints - if not change required values so it does
-        if solution[change + 1] > new_solution[change]:
-            new_solution[change + 1] = new_solution[change]
-        if solution[change + 2] > new_solution[change + 1]:
-            new_solution[change + 2] = new_solution[change + 1]
-
-    if change == 5:
-
-        possible_kernal_num = [3, 5, 7]
-
-        current_kernal_num = solution[change]
-        current_kernal_index = possible_kernal_num.index(current_kernal_num)
-
-        # decide direction of neighbour & change
-        max_up = (len(possible_kernal_num)-1) - current_kernal_index
-        max_down = 0 + current_kernal_index
-        if max_up == 0:
-            new_solution[change] = possible_kernal_num[current_kernal_index - 1]
-        elif max_down == 0:
-            new_solution[change] = possible_kernal_num[current_kernal_index + 1]
-
-        if max_down != 0 and max_up != 0:
-            direction = random.randint(0,1)
-            if direction == 0:
-                new_solution[change] = possible_kernal_num[current_kernal_index - 1]
-            else:
-                new_solution[change] = possible_kernal_num[current_kernal_index + 1]
-
-        # check new solution meets design constraints - if not change required values so it does
-        if solution[change + 1] > new_solution[change]:
-            new_solution[change + 1] = new_solution[change]
-        if solution[change - 1] < new_solution[change]:
-            new_solution[change - 1] = new_solution[change]
-
-    if change == 6:
-
-        possible_kernal_num = [3, 5, 7]
-
-        current_kernal_num = solution[change]
-        current_kernal_index = possible_kernal_num.index(current_kernal_num)
-
-        # decide direction of neighbour & change
-        max_up = (len(possible_kernal_num)-1) - current_kernal_index
-        max_down = 0 + current_kernal_index
-        if max_up == 0:
-            new_solution[change] = possible_kernal_num[current_kernal_index - 1]
-        elif max_down == 0:
-            new_solution[change] = possible_kernal_num[current_kernal_index + 1]
-
-        if max_down != 0 and max_up != 0:
-            direction = random.randint(0,1)
-            if direction == 0:
-                new_solution[change] = possible_kernal_num[current_kernal_index - 1]
-            else:
-                new_solution[change] = possible_kernal_num[current_kernal_index + 1]
-
-        # check new solution meets design constraints - if not change required values so it does
-        if solution[change - 1] < new_solution[change]:
-            new_solution[change - 1] = new_solution[change]
-        if solution[change - 2] < new_solution[change - 1]:
-            new_solution[change - 2] = new_solution[change - 1]
-
-
-    # dropout selection
-    if change == 9:
-
-        less_than = solution[change] - 0.2
-        more_than = 0.5 - solution[change]
-        if less_than == 0:
-            direction = 1
-        if more_than == 0:
-            direction = 0
-        if less_than != 0 and more_than != 0:
-            direction = random.randint(0,1)
-        if direction == 0:
-            new_solution[change] = solution[change] - 0.01
-        else:
-            new_solution[change] = solution[change] + 0.01
-
-    return new_solution
-
-supply = [32, 64, 128, 64, 5, 5, 5, 1, 0.2, 0.35]
-demand = [1, 1, 1, 1, 1]
-
-
-print("Supply")
-print(supply)
-
-print("Demand")
-print(demand)
-
-rms = cost(supply,demand)
-print("RMS = " + str(rms))
-
-alpha = 0.95
-iterations = 200
-var = 0.01
-
-final_solution, cost, cost_values = anneal(supply,demand,alpha,iterations,var)
-
-print("Demand: ", demand)
-print("Final Solution: ", final_solution)
-print("Final Cost", cost)
-
-plt.subplot(232)
-plt.title("Error Function in Simmulated Annealing")
-plt.plot(cost_values)
-plt.grid(True)
-
-#plt.subplot(234)
-#plt.title("Initial Supply Matrix")
-#plt.imshow(supply, cmap='hot')
-
-#plt.subplot(235)
-#plt.title("Optimised Supply Matrix")
-#plt.imshow(final_solution, cmap='hot')
-
-#plt.subplot(236)
-#plt.title("Demand Matrix")
-#plt.imshow(demand, cmap='hot')
-        
-plt.show()
