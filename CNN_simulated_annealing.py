@@ -213,7 +213,7 @@ def anneal(solution, target, alpha, iterations):
             cost_values.append(old_cost)    # store the old cost in history container
 
             # check if the new accepted solution meets termination criteria
-            if new_cost < 0.025:    # termination criteria set to cost less than 0.025
+            if new_cost < 0.021:    # termination criteria set to cost less than 0.025
                 break_flag = 1      # if meets set the break flag
                 break               # break out of current temperature loop
         if break_flag == 1:
