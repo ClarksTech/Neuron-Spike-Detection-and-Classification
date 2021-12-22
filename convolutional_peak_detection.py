@@ -141,7 +141,7 @@ if test_peak_detection_performance == 1:
     tp, fp, tn, fn = pm.get_peak_detection_confusion_matrix_params(Index, incorrect_peak_index, correct_peak_index, len(datastream))
 
     # print the true positive, false positive, true negative, and false negative values for peak detection
-    print("Peak Detection TP=", tp, " FP=", fp," TN=", tn, " FN=", fn)
+    print("Peak Detection TP =", tp, " FP =", fp," TN =", tn, " FN =", fn)
 
-    precision, recall, F1_score = pm.gen_performance_metrics(tp[i], tn[i], fp[i], fn[i])
+    precision, recall, F1_score = pm.gen_performance_metrics(tp, tn, fp, fn)
     print("Perfromance Metrics: Precision=", precision, " Recall=", recall, " F1-score=", F1_score)

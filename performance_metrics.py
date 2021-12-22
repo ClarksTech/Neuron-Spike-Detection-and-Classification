@@ -4,6 +4,7 @@
 from sklearn.metrics import confusion_matrix
 import numpy as np 
 import matplotlib.pyplot as plt
+import random
 
 ######################################################################################
 ################## - Identify correct and incorrect peak indexes - ###################
@@ -159,102 +160,146 @@ def gen_performance_metrics(true_positive, true_negative, false_positive, false_
 ######## - Compare submission class waveforms to training class waveforms - ##########
 def submission_confidence_comparison(training_waveforms, training_class, submission_waveforms, submission_class):
 
+    # containers for training class waveforms
     training_class_1_waveforms = []
     training_class_2_waveforms = []
     training_class_3_waveforms = []
     training_class_4_waveforms = []
     training_class_5_waveforms = []
 
+    # containers for submission class waveforms
     submission_class_1_waveforms = []
     submission_class_2_waveforms = []
     submission_class_3_waveforms = []
     submission_class_4_waveforms = []
     submission_class_5_waveforms = []
 
+    # seperate training class into classes
     for y in range(len(training_class)):
         if training_class[y] == 1:
-            training_class_1_waveforms.append(training_waveforms[y])
+            training_class_1_waveforms.append(training_waveforms[y])    # add to class 1
         if training_class[y] == 2:
-            training_class_2_waveforms.append(training_waveforms[y])
+            training_class_2_waveforms.append(training_waveforms[y])    # add to class 2
         if training_class[y] == 3:
-            training_class_3_waveforms.append(training_waveforms[y])
+            training_class_3_waveforms.append(training_waveforms[y])    # add to class 3
         if training_class[y] == 4:
-            training_class_4_waveforms.append(training_waveforms[y])
+            training_class_4_waveforms.append(training_waveforms[y])    # add to class 4
         if training_class[y] == 5:
-            training_class_5_waveforms.append(training_waveforms[y])
+            training_class_5_waveforms.append(training_waveforms[y])    # add to class 5
 
+    # seperate submission class into classes
     for y in range(len(submission_class)):
         if submission_class[y] == 1:
-            submission_class_1_waveforms.append(submission_waveforms[y])
+            submission_class_1_waveforms.append(submission_waveforms[y])    # add to class 1
         if submission_class[y] == 2:
-            submission_class_2_waveforms.append(submission_waveforms[y])
+            submission_class_2_waveforms.append(submission_waveforms[y])    # add to class 2
         if submission_class[y] == 3:
-            submission_class_3_waveforms.append(submission_waveforms[y])
+            submission_class_3_waveforms.append(submission_waveforms[y])    # add to class 3
         if submission_class[y] == 4:
-            submission_class_4_waveforms.append(submission_waveforms[y])
+            submission_class_4_waveforms.append(submission_waveforms[y])    # add to class 4
         if submission_class[y] == 5:
-            submission_class_5_waveforms.append(submission_waveforms[y])
+            submission_class_5_waveforms.append(submission_waveforms[y])    # add to class 5
 
 
     
-    # plot all found waveforms of peaks on same axis to verify detection is finding peaks
+    # plot class 1 training waveforms
     fig, ax = plt.subplots(figsize=(15, 5))         # use subplot for single axis
     for i in range(10):                             # plot every waveform in peak detected waveform array
-        ax.plot(training_class_1_waveforms[i])             # subplot
+        random_waveform = random.randint(0, len(training_class_1_waveforms))
+        ax.plot(training_class_1_waveforms[random_waveform])             # subplot
+    plt.xlabel("Time Sample")                           # x axis is time sample
+    plt.ylabel("Amplitude")                             # y axis is amplitude
+    plt.title("Training Dataset Class 1 Waveform" )     # class and training or submission
     plt.show()  
 
-        # plot all found waveforms of peaks on same axis to verify detection is finding peaks
+    # plot class 1 submission waveforms
     fig, ax = plt.subplots(figsize=(15, 5))         # use subplot for single axis
     for i in range(10):                             # plot every waveform in peak detected waveform array
-        ax.plot(submission_class_1_waveforms[i])             # subplot
+        random_waveform = random.randint(0, len(submission_class_1_waveforms))
+        ax.plot(submission_class_1_waveforms[random_waveform])             # subplot
+    plt.xlabel("Time Sample")                           # x axis is time sample
+    plt.ylabel("Amplitude")                             # y axis is amplitude
+    plt.title("Submission Dataset Class 1 Waveform" )     # class and training or submission
     plt.show() 
 
-            # plot all found waveforms of peaks on same axis to verify detection is finding peaks
+    # plot class 2 training waveforms
     fig, ax = plt.subplots(figsize=(15, 5))         # use subplot for single axis
     for i in range(10):                             # plot every waveform in peak detected waveform array
-        ax.plot(training_class_2_waveforms[i])             # subplot
+        random_waveform = random.randint(0, len(training_class_2_waveforms))
+        ax.plot(training_class_2_waveforms[random_waveform])             # subplot
+    plt.xlabel("Time Sample")                           # x axis is time sample
+    plt.ylabel("Amplitude")                             # y axis is amplitude
+    plt.title("Training Dataset Class 2 Waveform" )     # class and training or submission
     plt.show() 
 
-            # plot all found waveforms of peaks on same axis to verify detection is finding peaks
+    # plot class 2 submission waveforms
     fig, ax = plt.subplots(figsize=(15, 5))         # use subplot for single axis
     for i in range(10):                             # plot every waveform in peak detected waveform array
-        ax.plot(submission_class_2_waveforms[i])             # subplot
+        random_waveform = random.randint(0, len(submission_class_2_waveforms))
+        ax.plot(submission_class_2_waveforms[random_waveform])             # subplot
+    plt.xlabel("Time Sample")                           # x axis is time sample
+    plt.ylabel("Amplitude")                             # y axis is amplitude
+    plt.title("Submission Dataset Class 2 Waveform" )     # class and training or submission
     plt.show() 
 
-            # plot all found waveforms of peaks on same axis to verify detection is finding peaks
+    # plot class 3 training waveforms
     fig, ax = plt.subplots(figsize=(15, 5))         # use subplot for single axis
     for i in range(10):                             # plot every waveform in peak detected waveform array
-        ax.plot(training_class_3_waveforms[i])             # subplot
+        random_waveform = random.randint(0, len(training_class_3_waveforms))
+        ax.plot(training_class_3_waveforms[random_waveform])             # subplot
+    plt.xlabel("Time Sample")                           # x axis is time sample
+    plt.ylabel("Amplitude")                             # y axis is amplitude
+    plt.title("Training Dataset Class 3 Waveform" )     # class and training or submission
     plt.show() 
 
-            # plot all found waveforms of peaks on same axis to verify detection is finding peaks
+    # plot class 3 submission waveforms
     fig, ax = plt.subplots(figsize=(15, 5))         # use subplot for single axis
     for i in range(10):                             # plot every waveform in peak detected waveform array
-        ax.plot(submission_class_3_waveforms[i])             # subplot
+        random_waveform = random.randint(0, len(submission_class_3_waveforms))
+        ax.plot(submission_class_3_waveforms[random_waveform])             # subplot
+    plt.xlabel("Time Sample")                           # x axis is time sample
+    plt.ylabel("Amplitude")                             # y axis is amplitude
+    plt.title("Submission Dataset Class 3 Waveform" )     # class and training or submission
     plt.show() 
 
-            # plot all found waveforms of peaks on same axis to verify detection is finding peaks
+    # plot class 4 training waveforms
     fig, ax = plt.subplots(figsize=(15, 5))         # use subplot for single axis
     for i in range(10):                             # plot every waveform in peak detected waveform array
-        ax.plot(training_class_4_waveforms[i])             # subplot
+        random_waveform = random.randint(0, len(training_class_4_waveforms))
+        ax.plot(training_class_4_waveforms[random_waveform])             # subplot
+    plt.xlabel("Time Sample")                           # x axis is time sample
+    plt.ylabel("Amplitude")                             # y axis is amplitude
+    plt.title("Training Dataset Class 4 Waveform" )     # class and training or submission
     plt.show() 
 
-            # plot all found waveforms of peaks on same axis to verify detection is finding peaks
+    # plot class 4 submission waveforms
     fig, ax = plt.subplots(figsize=(15, 5))         # use subplot for single axis
     for i in range(10):                             # plot every waveform in peak detected waveform array
-        ax.plot(submission_class_4_waveforms[i])             # subplot
+        random_waveform = random.randint(0, len(submission_class_4_waveforms))
+        ax.plot(submission_class_4_waveforms[random_waveform])             # subplot
+    plt.xlabel("Time Sample")                           # x axis is time sample
+    plt.ylabel("Amplitude")                             # y axis is amplitude
+    plt.title("Submission Dataset Class 4 Waveform" )     # class and training or submission
     plt.show() 
 
-            # plot all found waveforms of peaks on same axis to verify detection is finding peaks
+    # plot class 5 training waveforms
     fig, ax = plt.subplots(figsize=(15, 5))         # use subplot for single axis
     for i in range(10):                             # plot every waveform in peak detected waveform array
-        ax.plot(training_class_5_waveforms[i])             # subplot
+        random_waveform = random.randint(0, len(training_class_5_waveforms))
+        ax.plot(training_class_5_waveforms[random_waveform])             # subplot
+    plt.xlabel("Time Sample")                           # x axis is time sample
+    plt.ylabel("Amplitude")                             # y axis is amplitude
+    plt.title("Training Dataset Class 5 Waveform" )     # class and training or submission
     plt.show() 
 
-            # plot all found waveforms of peaks on same axis to verify detection is finding peaks
+    # plot class 5 submission waveforms
     fig, ax = plt.subplots(figsize=(15, 5))         # use subplot for single axis
     for i in range(10):                             # plot every waveform in peak detected waveform array
-        ax.plot(submission_class_5_waveforms[i])             # subplot
+        random_waveform = random.randint(0, len(submission_class_5_waveforms))
+        ax.plot(submission_class_5_waveforms[random_waveform])             # subplot
+    plt.xlabel("Time Sample")                           # x axis is time sample
+    plt.ylabel("Amplitude")                             # y axis is amplitude
+    plt.title("Submission Dataset Class 5 Waveform" )     # class and training or submission
     plt.show() 
 
     return
