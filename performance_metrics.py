@@ -3,6 +3,7 @@
 
 from sklearn.metrics import confusion_matrix
 import numpy as np 
+import matplotlib.pyplot as plt
 
 ######################################################################################
 ################## - Identify correct and incorrect peak indexes - ###################
@@ -152,3 +153,108 @@ def gen_performance_metrics(true_positive, true_negative, false_positive, false_
 
     # return precision, recall, and F1 score performance metrics for given confusion matrix params
     return precision, recall, F1_score
+
+
+######################################################################################
+######## - Compare submission class waveforms to training class waveforms - ##########
+def submission_confidence_comparison(training_waveforms, training_class, submission_waveforms, submission_class):
+
+    training_class_1_waveforms = []
+    training_class_2_waveforms = []
+    training_class_3_waveforms = []
+    training_class_4_waveforms = []
+    training_class_5_waveforms = []
+
+    submission_class_1_waveforms = []
+    submission_class_2_waveforms = []
+    submission_class_3_waveforms = []
+    submission_class_4_waveforms = []
+    submission_class_5_waveforms = []
+
+    for y in range(len(training_class)):
+        if training_class[y] == 1:
+            training_class_1_waveforms.append(training_waveforms[y])
+        if training_class[y] == 2:
+            training_class_2_waveforms.append(training_waveforms[y])
+        if training_class[y] == 3:
+            training_class_3_waveforms.append(training_waveforms[y])
+        if training_class[y] == 4:
+            training_class_4_waveforms.append(training_waveforms[y])
+        if training_class[y] == 5:
+            training_class_5_waveforms.append(training_waveforms[y])
+
+    for y in range(len(submission_class)):
+        if submission_class[y] == 1:
+            submission_class_1_waveforms.append(submission_waveforms[y])
+        if submission_class[y] == 2:
+            submission_class_2_waveforms.append(submission_waveforms[y])
+        if submission_class[y] == 3:
+            submission_class_3_waveforms.append(submission_waveforms[y])
+        if submission_class[y] == 4:
+            submission_class_4_waveforms.append(submission_waveforms[y])
+        if submission_class[y] == 5:
+            submission_class_5_waveforms.append(submission_waveforms[y])
+
+
+    
+    # plot all found waveforms of peaks on same axis to verify detection is finding peaks
+    fig, ax = plt.subplots(figsize=(15, 5))         # use subplot for single axis
+    for i in range(10):                             # plot every waveform in peak detected waveform array
+        ax.plot(training_class_1_waveforms[i])             # subplot
+    plt.show()  
+
+        # plot all found waveforms of peaks on same axis to verify detection is finding peaks
+    fig, ax = plt.subplots(figsize=(15, 5))         # use subplot for single axis
+    for i in range(10):                             # plot every waveform in peak detected waveform array
+        ax.plot(submission_class_1_waveforms[i])             # subplot
+    plt.show() 
+
+            # plot all found waveforms of peaks on same axis to verify detection is finding peaks
+    fig, ax = plt.subplots(figsize=(15, 5))         # use subplot for single axis
+    for i in range(10):                             # plot every waveform in peak detected waveform array
+        ax.plot(training_class_2_waveforms[i])             # subplot
+    plt.show() 
+
+            # plot all found waveforms of peaks on same axis to verify detection is finding peaks
+    fig, ax = plt.subplots(figsize=(15, 5))         # use subplot for single axis
+    for i in range(10):                             # plot every waveform in peak detected waveform array
+        ax.plot(submission_class_2_waveforms[i])             # subplot
+    plt.show() 
+
+            # plot all found waveforms of peaks on same axis to verify detection is finding peaks
+    fig, ax = plt.subplots(figsize=(15, 5))         # use subplot for single axis
+    for i in range(10):                             # plot every waveform in peak detected waveform array
+        ax.plot(training_class_3_waveforms[i])             # subplot
+    plt.show() 
+
+            # plot all found waveforms of peaks on same axis to verify detection is finding peaks
+    fig, ax = plt.subplots(figsize=(15, 5))         # use subplot for single axis
+    for i in range(10):                             # plot every waveform in peak detected waveform array
+        ax.plot(submission_class_3_waveforms[i])             # subplot
+    plt.show() 
+
+            # plot all found waveforms of peaks on same axis to verify detection is finding peaks
+    fig, ax = plt.subplots(figsize=(15, 5))         # use subplot for single axis
+    for i in range(10):                             # plot every waveform in peak detected waveform array
+        ax.plot(training_class_4_waveforms[i])             # subplot
+    plt.show() 
+
+            # plot all found waveforms of peaks on same axis to verify detection is finding peaks
+    fig, ax = plt.subplots(figsize=(15, 5))         # use subplot for single axis
+    for i in range(10):                             # plot every waveform in peak detected waveform array
+        ax.plot(submission_class_4_waveforms[i])             # subplot
+    plt.show() 
+
+            # plot all found waveforms of peaks on same axis to verify detection is finding peaks
+    fig, ax = plt.subplots(figsize=(15, 5))         # use subplot for single axis
+    for i in range(10):                             # plot every waveform in peak detected waveform array
+        ax.plot(training_class_5_waveforms[i])             # subplot
+    plt.show() 
+
+            # plot all found waveforms of peaks on same axis to verify detection is finding peaks
+    fig, ax = plt.subplots(figsize=(15, 5))         # use subplot for single axis
+    for i in range(10):                             # plot every waveform in peak detected waveform array
+        ax.plot(submission_class_5_waveforms[i])             # subplot
+    plt.show() 
+
+    return

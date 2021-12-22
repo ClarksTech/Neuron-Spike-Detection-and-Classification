@@ -158,8 +158,8 @@ def CNN_classifier(train_waveforms, train_class, test_waveforms, test_class, bat
     print("Test loss:", score[0])           # print the test loss
     print("Test accuracy:", score[1])       # print the test accuracy
 
-    # save the models weights for use later
-    model.save_weights('Optimised_Training_data_CNN.h5')
+    # save the models for use later
+    model.save('Optimised_Training_data_CNN.h5')
 
     # make predictions for test set
     test_class_predictions = model.predict(test_waveforms)              # create predictions for class of each test waveform
@@ -213,7 +213,7 @@ def anneal(solution, target, alpha, iterations):
             cost_values.append(old_cost)    # store the old cost in history container
 
             # check if the new accepted solution meets termination criteria
-            if new_cost < 0.007:    # termination criteria set to cost less than 0.007
+            if new_cost < 0.01:    # termination criteria set to cost less than 0.007
                 break_flag = 1      # if meets set the break flag
                 break               # break out of current temperature loop
         if break_flag == 1:
@@ -242,7 +242,7 @@ def cost(supply, demand):
     # get the F1-scores for each class
     f1_scores = []          # container to store f1-scores of each class
     for i in range(5):      # for each class
-        precision, recall, F1_score = pm.gen_performance_metrics(tp[i], tn[i], fp[i], fn[i])   # get f1-score
+        Precision, Recall, F1_score = pm.gen_performance_metrics(tp[i], tn[i], fp[i], fn[i])   # get f1-score
         f1_scores.append(F1_score)          # store all f1-scores in list
         
     # cost is the RMS error between the demanded F1-scores and the current solution generated F1-scores

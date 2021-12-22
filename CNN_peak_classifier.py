@@ -8,6 +8,7 @@ from keras.callbacks import EarlyStopping
 from matplotlib import pyplot
 import performance_metrics as pm
 import CNN_simulated_annealing as sa
+import scipy.io as spio
 
 
 ######################################################################################
@@ -96,6 +97,26 @@ def non_ideal_data_preperation(data_file):
     # return the test and train waveforms and classes
     return train_waveforms, train_class, test_waveforms, test_class
 
+
+######################################################################################
+############# - Submission Data Extraction, Proccessing, Splitting - #################
+def submission_data_preperation(data_file):
+
+    # the data, split to test and train sets
+    data_stream, sample_rate = pd.load_submission_dataset(data_file)    # load the ideal training data
+    filtered_data_stream = pd.wavelet_filter_datastream(data_stream)                # filter the waveform
+
+    # detect the peaks in the resulting datastream - store peak index and waveform in variables
+    peak_start_index, peak_found_waveform, peak_maxima_index = pd.convolution_peak_detection(filtered_data_stream, 0.42, 50)
+
+    # print length of found indexes
+    print("Detected number of peaks: ", len(peak_maxima_index))
+
+    # correct dimensions for keras to shape (50,1)
+    test_waveforms = np.expand_dims(peak_found_waveform, -1)     # add another dimension to test waveform list as keras requires 2 dimensions
+
+    # return the test and train waveforms and classes
+    return  test_waveforms, peak_maxima_index
 
 ######################################################################################
 #################################### - CNN - #########################################
@@ -248,7 +269,16 @@ if optimise_CNN_performance == 1:
     training_waveforms, training_class, test_waveforms, test_class = non_ideal_data_preperation("training.mat")
 
     # create and train the CNN, producng predicted classes for input waveforms
-    test_class_predictions = sa.CNN_classifier(training_waveforms, training_class, test_waveforms, test_class, batch_size=128, epochs=100, optimisation_params=final_solution )
+    #test_class_predictions = sa.CNN_classifier(training_waveforms, training_class, test_waveforms, test_class, batch_size=128, epochs=100, optimisation_params=final_solution )
+
+    # It can be used to reconstruct the model identically.
+    Optimised_CNN_model = keras.models.load_model("Optimised_Training_data_CNN.h5")
+
+    # produce predictions
+    test_class_predictions = Optimised_CNN_model.predict(test_waveforms)
+    test_class_predictions = np.argmax(test_class_predictions, axis=1)  # convert back from 'one-hot-encoding' by taking the largest value in the binary class matrices
+    test_class_predictions[:] = [pred + 1 for pred in test_class_predictions]   # increment the predicted classes so class count starts from 1 not zero
+
 
     # get true positive, true negative, false positive, and false negative classifications for each class
     sa_tp, sa_tn, sa_fp, sa_fn = pm.get_confusion_matrix_params(test_class, test_class_predictions, 5)
@@ -299,6 +329,35 @@ if optimise_CNN_performance == 1:
         pyplot.ylabel("Performance")      # y axis is performance in range 0 to 1 (1 being best)
         Class = i+1
         pyplot.title("Class %i Performance metrics before and after SA" %Class)   # title the bar graph so the class it is 
-
         pyplot.show()
+
+######################################################################################
+########################### - Produce Submission File - ##############################
+
+produce_submission_data = 1
+if produce_submission_data == 1:
+
+    # prepare the submission data for the CNN - giving detected peak indexes and waveforms
+    test_waveforms, identified_peak_index, = submission_data_preperation("submission.mat")
+
+    # It can be used to reconstruct the model identically.
+    Optimised_CNN_model = keras.models.load_model("Optimised_Training_data_CNN.h5")
+
+    # produce predictions
+    test_class_predictions = Optimised_CNN_model.predict(test_waveforms)
+    test_class_predictions = np.argmax(test_class_predictions, axis=1)  # convert back from 'one-hot-encoding' by taking the largest value in the binary class matrices
+    test_class_predictions[:] = [pred + 1 for pred in test_class_predictions]   # increment the predicted classes so class count starts from 1 not zero
+
+    # check sizes produced
+    print("############## - Submission Data - ##############")
+    print("Number of Peaks detected: ", len(identified_peak_index))
+    print("Number of Waveforms detected: ", len(test_waveforms))
+    print("Number of Class predictions: ", len(test_class_predictions))
+
+    # Saves the peak maxima and predicted class in .mat file
+    Index = np.array(identified_peak_index)
+    Class = np.array(test_class_predictions)
+    spio.savemat("CandidateNum_12080.mat", {"Index":Index, "Class":Class})
+
+    pm.submission_confidence_comparison(training_waveforms, training_class, test_waveforms, test_class_predictions)
 
