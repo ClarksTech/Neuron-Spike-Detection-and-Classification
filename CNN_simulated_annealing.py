@@ -505,7 +505,6 @@ def neighbour(solution):
 test_SA_performance = 0
 if test_SA_performance == 1:
 
-    # best sol - 32 64 128 32 7 5 3 1 0.2 0.2]
     supply = [32, 64, 128, 64, 3, 3, 3, 1, 0.2, 0.35]   # CNN hyper parameters supplied to the SA for optimisation
     demand = [1, 1, 1, 1, 1]                            # the solution demand matrix (matrix of F1-score for each classificatio class where 1 = perfect)
 

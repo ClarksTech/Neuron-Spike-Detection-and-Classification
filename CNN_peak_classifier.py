@@ -357,7 +357,8 @@ if produce_submission_data == 1:
     # Saves the peak maxima and predicted class in .mat file
     Index = np.array(identified_peak_index)
     Class = np.array(test_class_predictions)
-    spio.savemat("CandidateNum_12080.mat", {"Index":Index, "Class":Class})
+    spio.savemat("CandidateNum_12080.mat", {"Index":Index, "Class":Class})  # save as candidate number
 
+    # print class waveforms for known training classes, and submission data to compare
     pm.submission_confidence_comparison(training_waveforms, training_class, test_waveforms, test_class_predictions)
 

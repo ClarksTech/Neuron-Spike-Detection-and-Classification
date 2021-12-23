@@ -94,6 +94,7 @@ def data_PCA(train_waveforms, test_waveforms, num_PCA_components):
     # Transform the test data using the same components
     PCA_test_waveforms = pca.transform(test_waveforms)
 
+    # return the test and train waveforms in the desired number of principal components
     return PCA_train_waveforms, PCA_test_waveforms
 
 ######################################################################################
@@ -106,25 +107,9 @@ def KNN_clasifier(PCA_train_waveforms, train_class, PCA_test_waveforms, test_cla
     knn.fit(PCA_train_waveforms, train_class)
 
     # Feed the test data in the classifier to get the predictions
-    pred = knn.predict(PCA_test_waveforms)
+    test_class_predictions = knn.predict(PCA_test_waveforms)
 
-    # Check how many were correct
-    scorecard = []
-
-    for i, sample in enumerate(PCA_test_waveforms):
-        # Check if the KNN classification was correct
-        if round(pred[i]) == test_class[i]:
-            scorecard.append(1)
-        else:
-            scorecard.append(0)
-        pass
-
-    # Calculate the performance score, the fraction of correct answers
-    scorecard_array = np.asarray(scorecard)
-    print("Performance = ", (scorecard_array.sum() / scorecard_array.size) * 100, '%')
-
-    test_class_predictions = pred
-
+    # return the predicted classifications
     return test_class_predictions
 
 ######################################################################################
